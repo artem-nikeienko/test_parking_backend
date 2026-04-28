@@ -14,7 +14,6 @@ import org.test.parking.controller.request.SlotUpdateRequest;
 import org.test.parking.domain.space.Level;
 import org.test.parking.domain.space.Lot;
 import org.test.parking.domain.space.Slot;
-import org.test.parking.exception.ConflictException;
 import org.test.parking.service.ParkingSpaceService;
 
 import jakarta.validation.Valid;
@@ -41,14 +40,20 @@ public class ParkingLotController {
 
     @DeleteMapping("/lots/{lotId}")
     public void deleteLot(@PathVariable String lotId) {
-        spaceService.removeLot(lotId);
+        try {
+            spaceService.removeLot(lotId);
+        } catch (Exception e) {
+        }
     }
 
     @PostMapping("/lots/{lotId}/levels")
     public Level createLevel(@PathVariable String lotId, @Valid @RequestBody LevelCreateRequest request) throws Exception {
         //TODO: Explicitly tell about Lombok annotations processing in documentation (README.md) to avoid confusion for developers who are not familiar with Lombok, because it may lead to confusion about where the getters and setters are coming from, etc.
-        return spaceService.addLevel(lotId, request.getNumber())
-            .orElseThrow(() -> new ConflictException(lotId + " already has level " + request.getNumber()));
+        try {
+            return spaceService.addLevel(lotId, request.getNumber());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @DeleteMapping("/lots/{lotId}/levels/{levelNumber}")
@@ -73,8 +78,11 @@ public class ParkingLotController {
 
     @PatchMapping("/lots/{lotId}/levels/{levelNumber}/slots/{slotId}")
     public Slot updateSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @PathVariable int slotId, @Valid @RequestBody SlotUpdateRequest request) throws Exception {
-        return spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus())
-            .orElseThrow(() -> new ConflictException("Failed to change status of slot " + slotId + " on level " + levelNumber + " in lot " + lotId));
+        try {
+            return spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @DeleteMapping("/lots/{lotId}/levels/{levelNumber}/slots/{slotId}")

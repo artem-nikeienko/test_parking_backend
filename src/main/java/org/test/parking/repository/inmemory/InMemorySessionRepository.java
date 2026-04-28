@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Repository;
 import org.test.parking.domain.session.ParkingSession;
-import org.test.parking.domain.session.SessionStatus;
 import org.test.parking.repository.SessionRepository;
 
 @Repository
@@ -30,17 +29,18 @@ public class InMemorySessionRepository implements SessionRepository {
     @Override
     public Optional<ParkingSession> findActiveByPlate(String plate) {
         return store.values().stream()
-                .filter(s -> s.getVehicle().getLicensePlate().equalsIgnoreCase(plate))
-                .filter(s -> s.isActive())
-                .findFirst();
+            .filter(s -> s.getVehicle().getLicensePlate().equalsIgnoreCase(plate))
+            .filter(s -> s.isActive())
+            .findFirst();
     }
 
     @Override
-    public List<ParkingSession> findAllActive() {
+    public List<ParkingSession> findAllActive(String lotId) {
         List<ParkingSession> res = new ArrayList<>();
-        for (ParkingSession s : store.values()) {
-            if (s.getStatus() == SessionStatus.ACTIVE) res.add(s);
-        }
+        store.values().stream()
+            .filter(ParkingSession::isActive)
+            .filter(s -> s.getLot().getId().equals(lotId))
+            .forEach(res::add);
         return res;
     }
 }

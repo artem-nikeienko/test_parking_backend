@@ -6,6 +6,7 @@ import java.util.Set;
 import org.test.parking.domain.session.SlotStatus;
 import org.test.parking.domain.vehicle.Vehicle;
 import org.test.parking.domain.vehicle.VehicleType;
+import org.test.parking.exception.domain.RestrictedSlotOperationException;
 
 public class Slot {
     //TODO: Provide Value Objects as IDs for better type safety and encapsulation, e.g. SlotId, LevelId, etc.
@@ -25,15 +26,25 @@ public class Slot {
         return status == SlotStatus.AVAILABLE;
     }
 
-    protected void occupy() {
+    protected void occupy() throws RestrictedSlotOperationException {
+        if (!isAvailable()) {
+            throw new RestrictedSlotOperationException(String.format("Cannot occupy slot [%d] in level [%d] because it is currently %s", id, levelNumber, status));
+        }
         this.status = SlotStatus.OCCUPIED;
     }
 
-    public void release() {
+    public boolean isOccupied() {
+        return status == SlotStatus.OCCUPIED;
+    }
+
+    protected void release() {
         this.status = SlotStatus.AVAILABLE;
     }
 
-    public void markOutOfService() {
+    protected void markOutOfService() throws RestrictedSlotOperationException {
+        if (isOccupied()) {
+            throw new RestrictedSlotOperationException(String.format("Cannot mark slot [%d] in level [%d] as out of service because it is currently occupied", id, levelNumber));
+        }
         this.status = SlotStatus.UNAVAILABLE;
     }
 

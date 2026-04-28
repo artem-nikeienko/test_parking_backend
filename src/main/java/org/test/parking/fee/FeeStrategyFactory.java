@@ -1,12 +1,13 @@
 package org.test.parking.fee;
 
-import org.test.parking.domain.vehicle.VehicleType;
-import org.test.parking.fee.impl.*;
-
-import org.springframework.stereotype.Component;
-
 import java.util.EnumMap;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+import org.test.parking.domain.vehicle.VehicleType;
+import org.test.parking.fee.impl.CarFeeStrategy;
+import org.test.parking.fee.impl.MotorcycleFeeStrategy;
+import org.test.parking.fee.impl.TruckFeeStrategy;
 
 @Component
 public class FeeStrategyFactory {

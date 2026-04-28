@@ -41,16 +41,16 @@ public class SessionController {
     }
 
     @GetMapping("/lots/{lotId}")
-    public List<ParkingSessionResponse> getActive() {
-        return service.getActiveSessions().stream()
+    public List<ParkingSessionResponse> getActive(@PathVariable String lotId) {
+        return service.getActiveSessions(lotId).stream()
                 .map(ParkingSessionResponse::fromSession)
                 .toList();
     }
 
     @PostMapping("/{sessionId}/check-out")
-    public CheckOutResponse checkOut(@PathVariable String id) {
+    public CheckOutResponse checkOut(@PathVariable String sessionId) {
         try {
-            return service.checkOut(id);
+            return service.checkOut(sessionId);
         } catch (Exception e) {
             return new CheckOutResponse();
         }

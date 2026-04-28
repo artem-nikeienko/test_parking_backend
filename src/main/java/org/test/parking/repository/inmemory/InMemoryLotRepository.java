@@ -34,8 +34,9 @@ public class InMemoryLotRepository implements LotRepository {
     }
 
     @Override
-    public void delete(String id) {
-        store.remove(id);
+    public Optional<Lot> delete(String id) {
+        Lot deletedLot = store.remove(id);
+        return Optional.ofNullable(deletedLot);
     }
 
     @Override

@@ -1,33 +1,31 @@
 package org.test.parking.service.impl;
 
-import org.test.parking.slot.SlotAllocationStrategy;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.test.parking.controller.response.CheckOutResponse;
 import org.test.parking.domain.session.ParkingSession;
 import org.test.parking.domain.session.SessionStatus;
-import org.test.parking.domain.session.SlotStatus;
 import org.test.parking.domain.space.Lot;
 import org.test.parking.domain.space.Slot;
-import org.test.parking.domain.space.SlotType;
 import org.test.parking.domain.vehicle.Vehicle;
-import org.test.parking.domain.vehicle.VehicleType;
-import org.test.parking.exception.ConflictException;
-import org.test.parking.exception.NotFoundException;
+import org.test.parking.exception.IncompatibleVehicleException;
+import org.test.parking.exception.LotFullException;
+import org.test.parking.exception.VehicleParkedException;
+import org.test.parking.exception.domain.LotNotFoundException;
+import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.SessionNotFoundException;
 import org.test.parking.repository.LotRepository;
 import org.test.parking.repository.SessionRepository;
 import org.test.parking.service.FeeService;
 import org.test.parking.service.ParkingSessionService;
+import org.test.parking.slot.SlotAllocationStrategy;
 
 @Service
 public class ParkingServiceImpl implements ParkingSessionService {
@@ -51,18 +49,18 @@ public class ParkingServiceImpl implements ParkingSessionService {
 
     @Override
     @Transactional
-    public ParkingSession checkIn(String lotId, Vehicle vehicle) throws ConflictException, NotFoundException {
+    public ParkingSession checkIn(String lotId, Vehicle vehicle)
+      throws VehicleParkedException, LotNotFoundException, LotFullException, IncompatibleVehicleException, RestrictedSlotOperationException {
         Optional<ParkingSession> optSession = sessionRepo.findActiveByPlate(vehicle.getLicensePlate());
         if (optSession.isPresent()) {
-            throw new ConflictException("Vehicle with the same license plate is already parked");
+            throw new VehicleParkedException("Vehicle with the same license plate is already parked");
         }
 
         Lot lot = getLotOrThrow(lotId);
-        
         Optional<Slot> optAllocatedSlot = lot.allocateSlot(vehicle, allocationStrategy);
         
         if (optAllocatedSlot.isEmpty()) {
-            throw new ConflictException("No available slot");
+            throw new IncompatibleVehicleException(String.format("No available slot for [%s] vehicle type", vehicle.getType()));    
         }
         lotRepo.save(lot);
 
@@ -81,9 +79,10 @@ public class ParkingServiceImpl implements ParkingSessionService {
 
     @Override
     @Transactional
-    public CheckOutResponse checkOut(String sessionId) throws NotFoundException {
+    public CheckOutResponse checkOut(String sessionId)
+      throws SessionNotFoundException {
         ParkingSession session = sessionRepo.findById(sessionId)
-            .orElseThrow(() -> new NotFoundException("Session not found"));
+            .orElseThrow(() -> new SessionNotFoundException("Session not found"));
 
         session.checkout();
         long minutes = Duration.between(session.getEntryTime(), session.getExitTime()).toMinutes();
@@ -92,9 +91,8 @@ public class ParkingServiceImpl implements ParkingSessionService {
         sessionRepo.save(session);
 
         Lot lot = session.getLot();
-        lot.releaseSlot(session.getLevelNumber(), session.getSlotId());
+        lot.releaseSlot(session.getSlot());
         lotRepo.save(lot);
-
 
         return CheckOutResponse.builder()
                 .licensePlate(session.getVehicle().getLicensePlate())
@@ -106,11 +104,11 @@ public class ParkingServiceImpl implements ParkingSessionService {
     }
 
     @Override
-    public List<ParkingSession> getActiveSessions() {
-        return sessionRepo.findAllActive();
+    public List<ParkingSession> getActiveSessions(String lotId) {
+        return sessionRepo.findAllActive(lotId);
     }
 
-    private Lot getLotOrThrow(String lotId) throws NotFoundException {
-        return lotRepo.findById(lotId).orElseThrow(() -> new NotFoundException("Lot not found"));
+    private Lot getLotOrThrow(String lotId) throws LotNotFoundException {
+        return lotRepo.findById(lotId).orElseThrow(() -> new LotNotFoundException("Lot not found"));
     }
 }

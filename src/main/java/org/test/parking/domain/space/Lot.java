@@ -8,7 +8,10 @@ import java.util.UUID;
 import org.test.parking.domain.SlotAssignment;
 import org.test.parking.domain.session.SlotStatus;
 import org.test.parking.domain.vehicle.Vehicle;
-import org.test.parking.exception.NotFoundException;
+import org.test.parking.exception.LotFullException;
+import org.test.parking.exception.domain.LevelNotFoundException;
+import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.SlotNotFoundException;
 import org.test.parking.slot.SlotAllocationStrategy;
 
 import lombok.Builder;
@@ -43,65 +46,56 @@ public class Lot {
         return addedLevel;
     }
 
-    public Level removeLevel(int levelNumber) {
+    public Level removeLevel(int levelNumber) throws RestrictedSlotOperationException{
+        if (hasOccupiedSlots(levelNumber)) {
+            throw new RestrictedSlotOperationException(String.format("Level [%d] in lot [%s] contains occupied slots and cannot be removed", levelNumber, name));
+        }
         Level removedLevel = levels.remove(levelNumber);
         return removedLevel;
-    }
-
-    public Optional<SlotAssignment> assignSlot(Vehicle vehicle) {
-        for (Level level : levels.values()) {
-            Optional<Slot> slot = level.findAvailableSlot(vehicle);
-            if (slot.isPresent()) {
-                Slot s = slot.get();
-                s.occupy();
-                return Optional.of(new SlotAssignment(level, s));
-            }
-        }
-        return Optional.empty();
     }
 
     public String getId() {
         return id;
     }
 
-    public Slot addSlot(int levelNumber, SlotType slotType) throws NotFoundException {
+    public Slot addSlot(int levelNumber, SlotType slotType) throws LevelNotFoundException {
         Level level = getLevelOrThrow(levelNumber);
         return level.addSlot(slotType);
     }
 
-    public Slot changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws NotFoundException {
+    public Slot changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
         Level level = getLevelOrThrow(levelNumber);
         return level.changeSlotStatus(slotId, slotStatus);
     }
 
-    public Slot removeSlot(int levelNumber, int slotId) throws NotFoundException {
+    public Slot removeSlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
         Level level = getLevelOrThrow(levelNumber);
         return level.removeSlot(slotId);
     }
 
-    public Optional<Slot> allocateSlot(Vehicle vehicle, SlotAllocationStrategy strategy) {
+    public Optional<Slot> allocateSlot(Vehicle vehicle, SlotAllocationStrategy strategy) throws LotFullException, RestrictedSlotOperationException {
+        if (isFull()) {
+            throw new LotFullException("No available slot");
+        }
+        
         List<Slot> candidates = findAvailableSlots(vehicle);
-    
         Slot selected = strategy.select(candidates, vehicle);
-    
         if (selected == null) {
             return Optional.empty();
         }
-    
         selected.occupy();
     
         return Optional.of(selected);
     }
 
-    public void releaseSlot(int levelNumber, int slotId) throws NotFoundException {
-        Level level = getLevelOrThrow(levelNumber);
-        level.changeSlotStatus(slotId, SlotStatus.AVAILABLE);
+    public void releaseSlot(Slot slot) {
+        slot.release();
     }
 
-    private Level getLevelOrThrow(int levelNumber) throws NotFoundException {
+    private Level getLevelOrThrow(int levelNumber) throws LevelNotFoundException {
         Level level = levels.get(levelNumber);
         if (level == null) {
-            throw new NotFoundException(String.format("Level with number %n not found", levelNumber));
+            throw new LevelNotFoundException(String.format("Level with number %n not found", levelNumber));
         }
         return level;
     }
@@ -112,5 +106,16 @@ public class Lot {
             .filter(slot -> slot.isAvailable())
             .filter(slot -> slot.isCompatibleWith(vehicle))
             .toList();
+    }
+
+    public boolean isFull() {
+        return levels.values().stream()
+            .flatMap(level -> level.getSlots().stream())
+            .noneMatch(slot -> slot.isAvailable());
+    }
+
+    private boolean hasOccupiedSlots(int levelNumber) {
+        return levels.get(levelNumber).getSlots().stream()
+            .anyMatch(slot -> slot.isOccupied());
     }
 }

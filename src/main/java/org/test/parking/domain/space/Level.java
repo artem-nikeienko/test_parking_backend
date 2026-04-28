@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.test.parking.domain.session.SlotStatus;
 import org.test.parking.domain.vehicle.Vehicle;
+import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.SlotNotFoundException;
 
 public class Level {
 
@@ -25,7 +27,14 @@ public class Level {
         return slot;
     }
 
-    public Slot removeSlot(int slotId) {
+    public Slot removeSlot(int slotId) throws SlotNotFoundException, RestrictedSlotOperationException{
+        Slot slot = slots.get(slotId);
+        if (slot == null) {
+            throw new SlotNotFoundException(String.format("Slot with id [%d] not found in level [%d]", slotId, number));
+        }
+        if (slot.isOccupied()) {
+            throw new RestrictedSlotOperationException(String.format("Slot with id [%d] in level [%d] is occupied and cannot be removed", slotId, number));
+        }
         Slot removedSlot = slots.remove(slotId);
         return removedSlot;
     }
@@ -49,10 +58,10 @@ public class Level {
         return number;
     }
 
-    public Slot changeSlotStatus(Integer slotId, SlotStatus slotStatus) {
+    public Slot changeSlotStatus(Integer slotId, SlotStatus slotStatus) throws SlotNotFoundException, RestrictedSlotOperationException {
         Slot slot = slots.get(slotId);
         if (slot == null) {
-            return null;
+            throw new SlotNotFoundException(String.format("Slot with id [%d] not found in level [%d]", slotId, number));
         }
         switch (slotStatus) {
             case AVAILABLE -> slot.release();
