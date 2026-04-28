@@ -1,0 +1,484 @@
+openapi: 3.0.3
+info:
+  title: Smart Parking System API
+  version: "1.0.0"
+  description: |
+    Smart Parking System backend API.
+
+    Features:
+    - Parking lot management (lots, levels, slots)
+    - Vehicle check-in / check-out
+    - Parking session tracking
+    - Fee calculation based on duration and vehicle type
+
+servers:
+  - url: https://localhost:8080
+    description: dev
+
+tags:
+  - name: lots
+  - name: levels
+  - name: slots
+  - name: sessions
+
+paths:
+
+  # -------------------- LOTS --------------------
+
+  /parking/lots:
+    # get:
+    #   tags: [lots]
+    #   operationId: GetLots
+    #   summary: Get all parking lots
+    #   description: Retrieve a list of all parking lots with their details.
+    #   responses:
+    #     '200':
+    #       description: List of parking lots
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: array
+    #             items:
+    #               $ref: '#/components/schemas/Lot'
+
+    post:
+      tags: [lots]
+      operationId: CreateLot
+      summary: Create parking lot
+      description: Create a new parking lot with a unique name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LotCreate'
+      responses:
+        '201':
+          description: Parking lot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Conflict (unique constraint violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/UniqueConstraintViolation'
+
+  /parking/lots/{lotId}:
+    delete:
+      tags: [lots]
+      operationId: DeleteLot
+      summary: Delete parking lot
+      parameters:
+        - $ref: '#/components/parameters/lotId'
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------- LEVELS --------------------
+
+  /parking/lots/{lotId}/levels:
+    post:
+      tags: [levels]
+      operationId: CreateLevel
+      summary: Add level to parking lot
+      parameters:
+        - $ref: '#/components/parameters/lotId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LevelCreate'
+      responses:
+        '201':
+          description: Level created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict (unique constraint violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/UniqueConstraintViolation'
+
+  #ASSUMPTION: We use shorter path for level and slot operations, as they can be easily identified by their IDs without needing to specify the parent lot/level in the path.
+  # Low coupling, shallow nesting - good RESTful design.
+  /parking/lots/{lotId}/levels/{levelNumber}:
+    delete:
+      tags: [levels]
+      operationId: DeleteLevel
+      summary: Remove level
+      parameters:
+        - $ref: '#/components/parameters/levelId'
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------- SLOTS --------------------
+
+  /parking/lots/{lotId}/levels/{levelNumber}/slots:
+    post:
+      tags: [slots]
+      operationId: CreateSlot
+      summary: Add parking slot
+      parameters:
+        - $ref: '#/components/parameters/levelId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotCreate'
+      responses:
+        '201':
+          description: Slot created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict (unique constraint violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/UniqueConstraintViolation'
+
+  /parking/lots/{lotId}/levels/{levelNumber}/slots/{slotId}:
+    patch:
+      tags: [slots]
+      operationId: UpdateSlot
+      summary: Update slot status (available/unavailable)
+      parameters:
+        - $ref: '#/components/parameters/slotId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotUpdate'
+      responses:
+        '200':
+          description: Slot updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [slots]
+      operationId: DeleteSlot
+      summary: Remove slot
+      parameters:
+        - $ref: '#/components/parameters/slotId'
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------- VEHICLE CHECK-IN / CHECK-OUT --------------------
+
+  /sessions/lots/{lotId}:
+    post:
+      tags: [sessions]
+      operationId: CheckInVehicle
+      summary: Check-in vehicle
+      description: |
+        Assigns an available compatible slot and creates a parking session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+      responses:
+        '201':
+          description: Vehicle checked-in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Conflict (unique constraint violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/UniqueConstraintViolation'
+
+    #ASSUMPTION: Though there are no requirements for sessions GET endpoint, I think it would be useful to have it for testing and debugging purposes, so we can easily see all active sessions and their details without needing to query the database directly. It can also be helpful for monitoring the system and ensuring that sessions are being created and completed correctly.
+    get:
+      tags: [sessions]
+      operationId: GetActiveSessions
+      summary: Get active parking sessions
+      responses:
+        '200':
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSession'
+
+  /sessions/{sessionId}/check-out:
+    post:
+      tags: [sessions]
+      operationId: CheckOutVehicle
+      summary: Check-out vehicle
+      description: |
+        Completes session, frees slot and calculates fee.
+      # requestBody:
+      #   required: true
+      #   content:
+      #     application/json:
+      #       schema:
+      #         $ref: '#/components/schemas/CheckOutRequest'
+      responses:
+        '200':
+          description: Checkout summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckOutResponse'
+
+components:
+
+  parameters:
+    lotId:
+      name: lotId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    levelId:
+      name: levelId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    slotId:
+      name: slotId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  #ASSUMPTION: I intentionally keep error responses generic and reusable across all endpoints, as they will have the same structure (code + message) and can be used for various error scenarios (bad request, not found, unauthorized, etc.) without needing to define specific error schemas for each case. This keeps the API design simpler and more consistent.
+  # For simplicity and focus on core functionality, I also omit authentication/authorization related responses (401 Unauthorized, 403 Forbidden) and assume all endpoints are accessible without authentication for now. In a real-world application, we would likely need to add these and define appropriate error responses for them as well.
+  # The same goes for other common responses like 500 Internal Server Error - we can assume that any unexpected errors will also return a generic error response with code "INTERNAL_ERROR" or similar, without needing to explicitly define it in the OpenAPI spec at this stage.
+  responses:
+    BadRequest:
+      description: Bad request - inproper field types, missing required fields, etc.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UniqueConstraintViolation:
+      description: Unique constraint violation - e.g. trying to create a lot with a name that already exists, or check-in a vehicle with a license plate that already has an active session.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+
+#ASSUMPTION: As far as there may be very many of lots, we will use UUID format as their IDs,
+# so we don't have to worry about ID generation and can easily create new lots without conflicts.
+    Lot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          #ASSUMPTION: Lot names should be unique and not too long, let's say max 256 characters.
+          maxLength: 256
+
+    LotCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        #ASSUMPTION: It's naturally to create a lot with some levels already, so we can (but not obliged to) include them in the request.
+        # They will be created together with the lot.
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelCreate'
+      required: [name]
+
+    Level:
+      type: object
+      properties:
+        #ASSUMPTION: level ID may be represented by a string combining lot ID and level number (so we can easily identify which lot it belongs to without extra queries)(?).
+        id:
+          type: string
+        number:
+          type: integer
+        lotId:
+          type: string
+
+    LevelCreate:
+      type: object
+      properties:
+        number:
+          description: Number of parking lot level to be added. Must be unique within a parking lot.
+          type: integer
+        #ASSUMPTION: Similar to levels, it's convenient to create a level with some slots already, so we can (but not obliged to) include them in the request.
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotCreate'
+      required: [number]
+
+    Slot:
+      type: object
+      properties:
+        #ASSUMPTION: slot ID may be represented by a string combining level ID and slot number (so we can easily identify which level it belongs to without extra queries)(?).
+        id:
+          type: string
+        levelId:
+          type: string
+        type:
+          $ref: '#/components/schemas/SlotType'
+        status:
+          $ref: '#/components/schemas/SlotStatus'
+
+    SlotCreate:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SlotType'
+      required: [type]
+
+    SlotUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/SlotStatusUpdate'
+      required: [status]
+
+    Vehicle:
+      type: object
+      description: Vehicle entity representation.
+      properties:
+        licensePlate:
+          description: Vehicle license plate number. Must be unique among ACTIVE parking sessions.
+          type: string
+        type:
+          $ref: '#/components/schemas/VehicleType'
+      required: [licensePlate, type]
+
+    ParkingSession:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        vehicle:
+          $ref: '#/components/schemas/Vehicle'
+        lot:
+          $ref: '#/components/schemas/Lot'
+        level:
+          $ref: '#/components/schemas/Level'
+        slot:
+          $ref: '#/components/schemas/Slot'
+        entryTime:
+          type: string
+          format: date-time
+
+    CheckInRequest:
+      type: object
+      properties:
+        vehicle:
+          $ref: '#/components/schemas/Vehicle'
+      required: [vehicle]
+
+    # CheckOutRequest:
+    #   type: object
+    #   properties:
+    #     licensePlate:
+    #       type: string
+    #   required: [licensePlate]
+
+    CheckOutResponse:
+      type: object
+      properties:
+        licensePlate:
+          type: string
+        entryTime:
+          type: string
+        exitTime:
+          type: string
+        durationMinutes:
+          type: integer
+        fee:
+          type: number
+        #ASSUMPTION: I'll not include currency in the response for simplicity, but in a real-world application we would likely need to specify it as well (e.g. feeCurrency: "USD" or similar).
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "SESSION_NOT_FOUND"
+        message:
+          type: string
+          example: "Session not found"
+
+# --- ENUMS ---
+
+    SlotType:
+      type: string
+      enum: [COMPACT, LARGE, MOTORCYCLE, HANDICAPPED]
+
+    SlotStatus:
+      type: string
+      enum: [AVAILABLE, OCCUPIED, UNAVAILABLE]
+
+    SlotStatusUpdate:
+      type: string
+      enum: [AVAILABLE, UNAVAILABLE]
+
+    VehicleType:
+      type: string
+      enum: [CAR, MOTORCYCLE, TRUCK]
+
+    SessionStatus:
+      type: string
+      enum: [ACTIVE, COMPLETED]
