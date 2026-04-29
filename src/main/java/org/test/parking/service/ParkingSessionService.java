@@ -3,11 +3,9 @@ package org.test.parking.service;
 import java.util.List;
 
 import org.test.parking.controller.response.CheckOutResponse;
-import org.test.parking.domain.session.ParkingSession;
-import org.test.parking.domain.vehicle.Vehicle;
-import org.test.parking.exception.IncompatibleVehicleException;
-import org.test.parking.exception.LotFullException;
-import org.test.parking.exception.NotFoundException;
+import org.test.parking.domain.model.session.ParkingSession;
+import org.test.parking.domain.model.vehicle.Vehicle;
+import org.test.parking.exception.NoAvailableSlotsException;
 import org.test.parking.exception.VehicleParkedException;
 import org.test.parking.exception.domain.LotNotFoundException;
 import org.test.parking.exception.domain.RestrictedSlotOperationException;
@@ -24,12 +22,11 @@ public interface ParkingSessionService {
      *
      * @throws LotNotFoundException if the lot does not exist.
      * @throws VehicleParkedException if the vehicle is already parked.
-     * @throws LotFullException if no suitable slots are available.
-     * @throws IncompatibleVehicleException if no slot matches vehicle type.
+     * @throws NoAvailableSlotsException if no slot matches vehicle type.
      * @throws RestrictedSlotOperationException if the allocated slot is under maintenance or has restrictions preventing parking.
      */
     ParkingSession checkIn(String lotId, Vehicle vehicle)
-        throws VehicleParkedException, LotNotFoundException, LotFullException, IncompatibleVehicleException, RestrictedSlotOperationException;
+        throws VehicleParkedException, LotNotFoundException, NoAvailableSlotsException, RestrictedSlotOperationException;
 
     /**
      * Checks out a vehicle by session ID.

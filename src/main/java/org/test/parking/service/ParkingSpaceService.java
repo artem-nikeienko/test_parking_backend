@@ -1,10 +1,10 @@
 package org.test.parking.service;
 
-import org.test.parking.domain.session.SlotStatus;
-import org.test.parking.domain.space.Level;
-import org.test.parking.domain.space.Lot;
-import org.test.parking.domain.space.Slot;
-import org.test.parking.domain.space.SlotType;
+import org.test.parking.domain.model.session.SlotStatus;
+import org.test.parking.domain.model.space.Level;
+import org.test.parking.domain.model.space.Lot;
+import org.test.parking.domain.model.space.Slot;
+import org.test.parking.domain.model.space.SlotType;
 import org.test.parking.exception.ConflictException;
 import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
@@ -36,11 +36,11 @@ public interface ParkingSpaceService {
      *
      * @param lotId       Identifier of the lot.
      * @param levelNumber Level number (must be unique within the lot).
-     * @return Created {@link Level}.
+     * @return Created {@link Level} number.
      * @throws LotNotFoundException if the lot does not exist.
      * @throws ConflictException if a level with the same number already exists in the lot.
      */
-    Level addLevel(String lotId, int levelNumber) throws LotNotFoundException, ConflictException;
+    int addLevel(String lotId, int levelNumber) throws LotNotFoundException, ConflictException;
 
     /**
      * Removes a level from a parking lot.
@@ -52,7 +52,7 @@ public interface ParkingSpaceService {
      * @throws LevelNotFoundException if the level does not exist.
      * @throws RestrictedSlotOperationException if the level contains occupied slots and cannot be removed.
      */
-    Level removeLevel(String lotId, int levelNumber) throws LotNotFoundException, LevelNotFoundException, RestrictedSlotOperationException;
+    void removeLevel(String lotId, int levelNumber) throws LotNotFoundException, LevelNotFoundException, RestrictedSlotOperationException;
 
     /**
      * Adds a new parking slot to a specific level.
@@ -60,11 +60,11 @@ public interface ParkingSpaceService {
      * @param lotId       Identifier of the lot.
      * @param levelNumber Level number.
      * @param slotType    Type of the slot.
-     * @return Created {@link Slot}.
+     * @return Created {@link Slot} id.
      * @throws LotNotFoundException if the lot does not exist.
      * @throws LevelNotFoundException if the level does not exist.
      */
-    Slot addSlot(String lotId, int levelNumber, SlotType slotType) throws LotNotFoundException, LevelNotFoundException;
+    int addSlot(String lotId, int levelNumber, SlotType slotType) throws LotNotFoundException, LevelNotFoundException;
 
     /**
      * Changes the status of a parking slot (e.g., AVAILABLE, UNAVAILABLE).
@@ -73,13 +73,12 @@ public interface ParkingSpaceService {
      * @param levelNumber Level number.
      * @param slotId      Slot identifier.
      * @param slotStatus  New status.
-     * @return Updated {@link Slot}.
      * @throws LotNotFoundException if the lot does not exist.
      * @throws LevelNotFoundException if the level does not exist.
      * @throws SlotNotFoundException if the slot does not exist.
      * @throws RestrictedSlotOperationException if the status change is invalid (e.g., trying to set to UNAVAILABLE while occupied).
      */
-    Slot changeSlotStatus(String lotId, int levelNumber, int slotId, SlotStatus slotStatus)
+    void changeSlotStatus(String lotId, int levelNumber, int slotId, SlotStatus slotStatus)
         throws LotNotFoundException, LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException;
 
     /**
@@ -88,10 +87,9 @@ public interface ParkingSpaceService {
      * @param lotId       Identifier of the lot.
      * @param levelNumber Level number.
      * @param slotId      Slot identifier.
-     * @return Removed {@link Slot}.
      * @throws LotNotFoundException if the lot does not exist.
      * @throws LevelNotFoundException if the level does not exist.
      * @throws RestrictedSlotOperationException if the slot is currently occupied and cannot be removed.
      */
-    Slot removeSlot(String lotId, int levelNumber, int slotId) throws LotNotFoundException, LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException;
+    void removeSlot(String lotId, int levelNumber, int slotId) throws LotNotFoundException, LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException;
 }

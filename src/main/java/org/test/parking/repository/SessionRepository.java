@@ -3,7 +3,7 @@ package org.test.parking.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.test.parking.domain.session.ParkingSession;
+import org.test.parking.domain.model.session.ParkingSession;
 
 public interface SessionRepository {
 

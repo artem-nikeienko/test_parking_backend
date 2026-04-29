@@ -1,6 +1,6 @@
 package org.test.parking.controller.request;
 
-import org.test.parking.domain.session.SlotStatus;
+import org.test.parking.domain.model.session.SlotStatus;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

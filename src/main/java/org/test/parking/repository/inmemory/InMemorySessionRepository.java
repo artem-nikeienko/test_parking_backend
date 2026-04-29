@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Repository;
-import org.test.parking.domain.session.ParkingSession;
+import org.test.parking.domain.model.session.ParkingSession;
 import org.test.parking.repository.SessionRepository;
 
 @Repository
@@ -39,7 +39,7 @@ public class InMemorySessionRepository implements SessionRepository {
         List<ParkingSession> res = new ArrayList<>();
         store.values().stream()
             .filter(ParkingSession::isActive)
-            .filter(s -> s.getLot().getId().equals(lotId))
+            .filter(s -> s.getLotId().equals(lotId))
             .forEach(res::add);
         return res;
     }

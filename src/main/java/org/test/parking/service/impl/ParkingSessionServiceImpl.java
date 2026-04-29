@@ -10,14 +10,14 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.test.parking.controller.response.CheckOutResponse;
-import org.test.parking.domain.session.ParkingSession;
-import org.test.parking.domain.session.SessionStatus;
-import org.test.parking.domain.space.Lot;
-import org.test.parking.domain.space.Slot;
-import org.test.parking.domain.vehicle.Vehicle;
-import org.test.parking.exception.IncompatibleVehicleException;
-import org.test.parking.exception.LotFullException;
+import org.test.parking.domain.model.session.ParkingSession;
+import org.test.parking.domain.model.session.SessionStatus;
+import org.test.parking.domain.model.session.SlotAssignment;
+import org.test.parking.domain.model.space.Lot;
+import org.test.parking.domain.model.vehicle.Vehicle;
+import org.test.parking.exception.NoAvailableSlotsException;
 import org.test.parking.exception.VehicleParkedException;
+import org.test.parking.exception.domain.DomainException;
 import org.test.parking.exception.domain.LotNotFoundException;
 import org.test.parking.exception.domain.RestrictedSlotOperationException;
 import org.test.parking.exception.domain.SessionNotFoundException;
@@ -25,54 +25,50 @@ import org.test.parking.repository.LotRepository;
 import org.test.parking.repository.SessionRepository;
 import org.test.parking.service.FeeService;
 import org.test.parking.service.ParkingSessionService;
-import org.test.parking.slot.SlotAllocationStrategy;
+import org.test.parking.service.SlotAssignmentService;
 
 @Service
-public class ParkingServiceImpl implements ParkingSessionService {
+public class ParkingSessionServiceImpl implements ParkingSessionService {
 
     private final LotRepository lotRepo;
     private final SessionRepository sessionRepo;
     private final FeeService feeService;
-    private final SlotAllocationStrategy allocationStrategy;
+    private final SlotAssignmentService assignmentService;
 
-    public ParkingServiceImpl(
+    public ParkingSessionServiceImpl(
             LotRepository lotRepo,
             SessionRepository sessionRepo,
             FeeService feeService,
-            SlotAllocationStrategy allocationStrategy
+            SlotAssignmentService assignmentService
     ) {
         this.lotRepo = lotRepo;
         this.sessionRepo = sessionRepo;
         this.feeService = feeService;
-        this.allocationStrategy = allocationStrategy;
+        this.assignmentService = assignmentService;
     }
 
     @Override
     @Transactional
     public ParkingSession checkIn(String lotId, Vehicle vehicle)
-      throws VehicleParkedException, LotNotFoundException, LotFullException, IncompatibleVehicleException, RestrictedSlotOperationException {
+      throws VehicleParkedException, LotNotFoundException, NoAvailableSlotsException, RestrictedSlotOperationException {
         Optional<ParkingSession> optSession = sessionRepo.findActiveByPlate(vehicle.getLicensePlate());
         if (optSession.isPresent()) {
             throw new VehicleParkedException("Vehicle with the same license plate is already parked");
         }
 
         Lot lot = getLotOrThrow(lotId);
-        Optional<Slot> optAllocatedSlot = lot.allocateSlot(vehicle, allocationStrategy);
-        
-        if (optAllocatedSlot.isEmpty()) {
-            throw new IncompatibleVehicleException(String.format("No available slot for [%s] vehicle type", vehicle.getType()));    
-        }
+        SlotAssignment slotAssignment = assignmentService.assignSlot(lot, vehicle);
         lotRepo.save(lot);
 
         ParkingSession session = ParkingSession.builder()
-                .id(UUID.randomUUID().toString())
-                .status(SessionStatus.ACTIVE)
-                .vehicle(vehicle)
-                .lot(lot)
-                .slot(optAllocatedSlot.get())
-                //TODO: move entryTime to Controller layer and pass it as parameter to service
-                .entryTime(LocalDateTime.now())
-                .build();
+            .id(UUID.randomUUID().toString())
+            .status(SessionStatus.ACTIVE)
+            .vehicle(vehicle)
+            .lotId(lotId)
+            .slotAssignment(slotAssignment)
+            //TODO: move entryTime to Controller layer and pass it as parameter to service
+            .entryTime(LocalDateTime.now())
+            .build();
 
         return sessionRepo.save(session);
     }
@@ -90,9 +86,16 @@ public class ParkingServiceImpl implements ParkingSessionService {
         session.setFee(fee);
         sessionRepo.save(session);
 
-        Lot lot = session.getLot();
-        lot.releaseSlot(session.getSlot());
-        lotRepo.save(lot);
+        try {
+            Lot sessionLot = getLotOrThrow(session.getLotId());
+            sessionLot.releaseSlot(session.getSlotAssignment());
+            lotRepo.save(sessionLot);
+        } catch (DomainException e) {
+            // This is a very rare case indicating potential data integrity issues that should be investigated,
+            // but we still want to return checkout response with fee and timing details, so we log the error and continue without throwing exception further.
+            // In real application, we would use a logger here to log the error with sessionId and lotId for further investigation.
+            System.err.println(String.format("Error during slot release for session [%s]: %s", sessionId, e.getMessage()));
+        } //TODO: Add Exception handling for all other exceptions
 
         return CheckOutResponse.builder()
                 .licensePlate(session.getVehicle().getLicensePlate())

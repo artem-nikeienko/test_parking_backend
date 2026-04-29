@@ -1,4 +1,4 @@
-package org.test.parking.domain.space;
+package org.test.parking.domain.model.space;
 
 public enum SlotType {
     COMPACT,

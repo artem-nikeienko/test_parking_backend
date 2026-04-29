@@ -1,6 +1,6 @@
 package org.test.parking.controller.request;
 
-import org.test.parking.domain.space.SlotType;
+import org.test.parking.domain.model.space.SlotType;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package org.test.parking.domain.session;
+package org.test.parking.domain.model.session;
 
 public enum SessionStatus {
     ACTIVE,

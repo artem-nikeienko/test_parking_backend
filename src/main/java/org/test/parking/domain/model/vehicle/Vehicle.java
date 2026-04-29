@@ -1,4 +1,4 @@
-package org.test.parking.domain.vehicle;
+package org.test.parking.domain.model.vehicle;
 
 public class Vehicle {
     private final String licensePlate;

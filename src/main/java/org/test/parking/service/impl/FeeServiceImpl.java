@@ -1,6 +1,6 @@
 package org.test.parking.service.impl;
 
-import org.test.parking.domain.vehicle.Vehicle;
+import org.test.parking.domain.model.vehicle.Vehicle;
 import org.test.parking.fee.FeeStrategyFactory;
 import org.test.parking.service.FeeService;
 import org.springframework.stereotype.Service;

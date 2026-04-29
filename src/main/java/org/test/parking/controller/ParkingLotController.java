@@ -11,9 +11,7 @@ import org.test.parking.controller.request.LevelCreateRequest;
 import org.test.parking.controller.request.LotCreateRequest;
 import org.test.parking.controller.request.SlotCreateRequest;
 import org.test.parking.controller.request.SlotUpdateRequest;
-import org.test.parking.domain.space.Level;
-import org.test.parking.domain.space.Lot;
-import org.test.parking.domain.space.Slot;
+import org.test.parking.domain.model.space.Lot;
 import org.test.parking.service.ParkingSpaceService;
 
 import jakarta.validation.Valid;
@@ -47,12 +45,12 @@ public class ParkingLotController {
     }
 
     @PostMapping("/lots/{lotId}/levels")
-    public Level createLevel(@PathVariable String lotId, @Valid @RequestBody LevelCreateRequest request) throws Exception {
+    public int createLevel(@PathVariable String lotId, @Valid @RequestBody LevelCreateRequest request) throws Exception {
         //TODO: Explicitly tell about Lombok annotations processing in documentation (README.md) to avoid confusion for developers who are not familiar with Lombok, because it may lead to confusion about where the getters and setters are coming from, etc.
         try {
             return spaceService.addLevel(lotId, request.getNumber());
         } catch (Exception e) {
-            return null;
+            return 0;
         }
     }
 
@@ -68,20 +66,20 @@ public class ParkingLotController {
     @PostMapping("/lots/{lotId}/levels/{levelNumber}/slots")
     //TODO: Use some Response object instead of returning Slot directly, because we may want to return additional info in the future, such as the URL of the created slot, etc.
     //TODO: align openapi.yaml with controllers
-    public Slot createSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @Valid @RequestBody SlotCreateRequest request) {
+    public int createSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @Valid @RequestBody SlotCreateRequest request) {
         try {
             return spaceService.addSlot(lotId, levelNumber, request.getType());
         } catch (Exception e) {
-            return null;
+            return 0;
         }
     }
 
     @PatchMapping("/lots/{lotId}/levels/{levelNumber}/slots/{slotId}")
-    public Slot updateSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @PathVariable int slotId, @Valid @RequestBody SlotUpdateRequest request) throws Exception {
+    public void updateSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @PathVariable int slotId, @Valid @RequestBody SlotUpdateRequest request) throws Exception {
         try {
-            return spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus());
+            spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus());
         } catch (Exception e) {
-            return null;
+            
         }
     }
 

@@ -3,11 +3,9 @@ package org.test.parking.service.impl;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-import org.test.parking.domain.session.SlotStatus;
-import org.test.parking.domain.space.Level;
-import org.test.parking.domain.space.Lot;
-import org.test.parking.domain.space.Slot;
-import org.test.parking.domain.space.SlotType;
+import org.test.parking.domain.model.session.SlotStatus;
+import org.test.parking.domain.model.space.Lot;
+import org.test.parking.domain.model.space.SlotType;
 import org.test.parking.exception.ConflictException;
 import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
@@ -43,49 +41,40 @@ public class ParkingSpaceServiceImpl implements ParkingSpaceService {
     }
 
     @Override
-    public Level addLevel(String lotId, int levelNumber)
+    public int addLevel(String lotId, int levelNumber)
       throws LotNotFoundException, ConflictException {
         Lot lot = getLotOrThrow(lotId);
-        Level addedLevel = lot.addLevel(levelNumber);
-        if (addedLevel == null) {
-            throw new ConflictException(String.format("Level with number [%d] already exists in lot [%s]", levelNumber, lot.getName()));
-        }
-        return addedLevel;
+        int addedLevelNumber = lot.addLevel(levelNumber);
+        return addedLevelNumber;
     }
 
     @Override
-    public Level removeLevel(String lotId, int levelNumber)
+    public void removeLevel(String lotId, int levelNumber)
       throws LotNotFoundException, LevelNotFoundException, RestrictedSlotOperationException {
         Lot lot = getLotOrThrow(lotId);
-        Level removedLevel = lot.removeLevel(levelNumber);
-        if (removedLevel == null) {
-            throw new LevelNotFoundException(String.format("Level with number [%d] not found in lot [%s]", levelNumber, lot.getName()));
-        }
-        return removedLevel;
+        lot.removeLevel(levelNumber);
     }
 
     @Override
-    public Slot addSlot(String lotId, int levelNumber, SlotType slotType)
+    public int addSlot(String lotId, int levelNumber, SlotType slotType)
       throws LotNotFoundException, LevelNotFoundException {
         Lot lot = getLotOrThrow(lotId);
-        Slot addedSlot = lot.addSlot(levelNumber, slotType);
-        return addedSlot;
+        int addedSlotId = lot.addSlot(levelNumber, slotType);
+        return addedSlotId;
     }
 
     @Override
-    public Slot changeSlotStatus(String lotId, int levelNumber, int slotId, SlotStatus slotStatus)
+    public void changeSlotStatus(String lotId, int levelNumber, int slotId, SlotStatus slotStatus)
       throws LotNotFoundException, LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
         Lot lot = getLotOrThrow(lotId);
-        Slot changedSlot = lot.changeSlotStatus(levelNumber, slotId, slotStatus);
-        return changedSlot;
+        lot.changeSlotStatus(levelNumber, slotId, slotStatus);
     }
 
     @Override
-    public Slot removeSlot(String lotId, int levelNumber, int slotId)
+    public void removeSlot(String lotId, int levelNumber, int slotId)
       throws LotNotFoundException, LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
         Lot lot = getLotOrThrow(lotId);
-        Slot changedSlot = lot.removeSlot(levelNumber, slotId);
-        return changedSlot;
+        lot.removeSlot(levelNumber, slotId);
     }
 
     private Lot getLotOrThrow(String lotId) throws LotNotFoundException {

@@ -2,8 +2,8 @@ package org.test.parking.controller.response;
 
 import java.time.LocalDateTime;
 
-import org.test.parking.domain.session.ParkingSession;
-import org.test.parking.domain.session.SessionStatus;
+import org.test.parking.domain.model.session.ParkingSession;
+import org.test.parking.domain.model.session.SessionStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +30,7 @@ public class ParkingSessionResponse {
                 .licensePlate(session.getVehicle().getLicensePlate())
                 // .slotId(session.getSlot().getId())
                 // .levelId(session.getLevelNumber())
-                .lotId(session.getLot().getId())
+                .lotId(session.getLotId())
                 .entryTime(session.getEntryTime())
                 .build();
     }

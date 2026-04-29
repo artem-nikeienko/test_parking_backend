@@ -3,7 +3,7 @@ package org.test.parking.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.test.parking.domain.space.Lot;
+import org.test.parking.domain.model.space.Lot;
 
 public interface LotRepository {
 

@@ -1,7 +1,8 @@
 package org.test.parking.service;
 
 import java.math.BigDecimal;
-import org.test.parking.domain.vehicle.Vehicle;
+
+import org.test.parking.domain.model.vehicle.Vehicle;
 
 public interface FeeService {
     

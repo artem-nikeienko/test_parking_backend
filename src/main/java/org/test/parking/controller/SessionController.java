@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.test.parking.controller.request.CheckInRequest;
 import org.test.parking.controller.response.CheckOutResponse;
 import org.test.parking.controller.response.ParkingSessionResponse;
-import org.test.parking.domain.session.ParkingSession;
+import org.test.parking.domain.model.session.ParkingSession;
 import org.test.parking.service.ParkingSessionService;
 
 import jakarta.validation.Valid;

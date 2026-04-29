@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Repository;
-import org.test.parking.domain.space.Lot;
+import org.test.parking.domain.model.space.Lot;
 import org.test.parking.repository.LotRepository;
 
 @Repository
