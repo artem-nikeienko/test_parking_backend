@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.test.parking.domain.model.session.SlotStatus;
-import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SlotNotFoundException;
 
 public class Level {
@@ -29,25 +29,25 @@ public class Level {
         return slot.getId();
     }
 
-    public void removeSlot(int slotId) throws SlotNotFoundException, RestrictedSlotOperationException{
+    public void removeSlot(int slotId) throws SlotNotFoundException, RestrictedLotOperationException{
         Slot slot = getSlotOrThrow(slotId);
         if (slot.isOccupied()) {
-            throw new RestrictedSlotOperationException(String.format("Slot with id [%d] in level [%d] is occupied and cannot be removed", slotId, number));
+            throw new RestrictedLotOperationException(String.format("Slot with id [%d] in level [%d] is occupied and cannot be removed", slotId, number));
         }
         slots.remove(slotId);
     }
 
-    public void occupySlot(int slotId) throws SlotNotFoundException, RestrictedSlotOperationException {
+    public void occupySlot(int slotId) throws SlotNotFoundException, RestrictedLotOperationException {
         getSlotOrThrow(slotId)
             .occupy();
     }
 
-    public void releaseSlot(int slotId) throws SlotNotFoundException, RestrictedSlotOperationException {
+    public void releaseSlot(int slotId) throws SlotNotFoundException, RestrictedLotOperationException {
         getSlotOrThrow(slotId)
             .release();
     }
 
-    public Slot changeSlotStatus(Integer slotId, SlotStatus slotStatus) throws SlotNotFoundException, RestrictedSlotOperationException {
+    public Slot changeSlotStatus(Integer slotId, SlotStatus slotStatus) throws SlotNotFoundException, RestrictedLotOperationException {
         Slot slot = getSlotOrThrow(slotId);
         switch (slotStatus) {
             case AVAILABLE -> slot.release();

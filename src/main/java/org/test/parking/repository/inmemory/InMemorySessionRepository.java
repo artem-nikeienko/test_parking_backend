@@ -39,7 +39,7 @@ public class InMemorySessionRepository implements SessionRepository {
         List<ParkingSession> res = new ArrayList<>();
         store.values().stream()
             .filter(ParkingSession::isActive)
-            .filter(s -> s.getLotId().equals(lotId))
+            .filter(s -> s.getSlotAssignment().getLotId().equals(lotId))
             .forEach(res::add);
         return res;
     }

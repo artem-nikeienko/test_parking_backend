@@ -7,10 +7,8 @@ import org.test.parking.domain.model.session.SessionStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,16 +20,23 @@ public class ParkingSessionResponse {
     private String levelId;
     private String lotId;
     private LocalDateTime entryTime;
+    private String errorMessage;
 
-    public static ParkingSessionResponse fromSession(ParkingSession session) {
+    public static ParkingSessionResponse success(ParkingSession session) {
         return ParkingSessionResponse.builder()
-                // .id(session.getId())
-                // .status(session.getStatus())
-                .licensePlate(session.getVehicle().getLicensePlate())
-                // .slotId(session.getSlot().getId())
-                // .levelId(session.getLevelNumber())
-                .lotId(session.getLotId())
-                .entryTime(session.getEntryTime())
-                .build();
+            .id(session.getId())
+            .status(session.getStatus())
+            .licensePlate(session.getVehicle().getLicensePlate())
+            .lotId(session.getSlotAssignment().getLotId())
+            .levelId(session.getSlotAssignment().getLevelNumber().toString())
+            .slotId(session.getSlotAssignment().getSlotId().toString())
+            .entryTime(session.getEntryTime())
+            .build();
+    }
+
+    public static ParkingSessionResponse failed(String errorMessage) {
+        return ParkingSessionResponse.builder()
+            .errorMessage(errorMessage)
+            .build();
     }
 }

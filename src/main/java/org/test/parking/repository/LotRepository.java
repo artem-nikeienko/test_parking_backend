@@ -5,6 +5,17 @@ import java.util.Optional;
 
 import org.test.parking.domain.model.space.Lot;
 
+/**
+ * Repository abstraction for managing parking lot persistence.
+ * <p>
+ * Provides methods for storing, retrieving, and deleting parking lot aggregates.
+ * </p>
+ *
+ * <p>
+ * Implementations may use in-memory storage or external databases,
+ * but must preserve aggregate integrity.
+ * </p>
+ */
 public interface LotRepository {
 
      /**

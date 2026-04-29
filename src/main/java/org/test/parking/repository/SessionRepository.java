@@ -5,6 +5,13 @@ import java.util.Optional;
 
 import org.test.parking.domain.model.session.ParkingSession;
 
+/**
+ * Repository abstraction for managing parking session persistence.
+ * <p>
+ * Responsible for storing and retrieving parking sessions,
+ * including active and completed sessions.
+ * </p>
+ */
 public interface SessionRepository {
 
     /**
@@ -13,7 +20,6 @@ public interface SessionRepository {
      * @param session Session to save.
      * @return Saved session instance.
      *
-     * @throws IllegalArgumentException if session is null.
      */
     ParkingSession save(ParkingSession session);
 

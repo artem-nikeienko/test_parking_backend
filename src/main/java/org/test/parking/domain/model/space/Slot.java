@@ -1,7 +1,7 @@
 package org.test.parking.domain.model.space;
 
 import org.test.parking.domain.model.session.SlotStatus;
-import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.RestrictedLotOperationException;
 
 import lombok.Getter;
 
@@ -20,32 +20,25 @@ public class Slot {
         this.status = SlotStatus.AVAILABLE;
     }
 
-    protected void occupy() throws RestrictedSlotOperationException {
-        if (!isUnavailable()) {
-            throw new RestrictedSlotOperationException(String.format("Cannot occupy slot [%d] in level [%d] because it is currently %s", id, levelNumber, status));
+    protected void occupy() throws RestrictedLotOperationException {
+        if (isUnavailable()) {
+            throw new RestrictedLotOperationException(String.format("Cannot occupy slot [%d] in level [%d] because it is currently %s", id, levelNumber, status));
         }
         status = SlotStatus.OCCUPIED;
     }
 
-    protected void release() throws RestrictedSlotOperationException{
-        if (!isOccupied()) {
-            throw new RestrictedSlotOperationException(String.format("Cannot release slot [%d] in level [%d] because it is currently [%s]", id, levelNumber, status));
+    protected void release() throws RestrictedLotOperationException{
+        if (!isUnavailable()) {
+            throw new RestrictedLotOperationException(String.format("Cannot release slot [%d] in level [%d] because it is currently [%s]", id, levelNumber, status));
         }
         status = SlotStatus.AVAILABLE;
     }
 
-    protected void markOutOfService() throws RestrictedSlotOperationException {
+    protected void markOutOfService() throws RestrictedLotOperationException {
         if (isOccupied()) {
-            throw new RestrictedSlotOperationException(String.format("Cannot mark slot [%d] in level [%d] as out of service because it is currently occupied", id, levelNumber));
+            throw new RestrictedLotOperationException(String.format("Cannot mark slot [%d] in level [%d] as out of service because it is currently occupied", id, levelNumber));
         }
         status = SlotStatus.UNAVAILABLE;
-    }
-
-    protected void markInService() throws RestrictedSlotOperationException {
-        if (!isUnavailable()) {
-            throw new RestrictedSlotOperationException(String.format("Cannot make slot [%d] available in level [%d] because it is currently [%s]", id, levelNumber, status));
-        }
-        status = SlotStatus.AVAILABLE;
     }
 
     public boolean isUnavailable() {

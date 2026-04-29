@@ -3,34 +3,45 @@ package org.test.parking.domain.model.session;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.test.parking.domain.model.vehicle.Vehicle;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
-@Builder
-@AllArgsConstructor
-@Data
+@Getter
 public class ParkingSession {
 
     private final String id;
     private final Vehicle vehicle;
-    private final String lotId;
     private final SlotAssignment slotAssignment;
 
-    private final LocalDateTime entryTime;
+    private LocalDateTime entryTime;
     private LocalDateTime exitTime;
 
     private SessionStatus status;
 
+    //ASSUMPTION: BigDecimal is more preferable for financial calcultaions of decimal values than Double because of its accuracy.
     private BigDecimal fee;
 
-    public void checkout() {
-        //ASSUMPTION: we assume that exitTime is set at the service layer, calling this method, but isn't it better to pass it outside, from Controller level?
+    public ParkingSession(Vehicle vehicle, SlotAssignment slotAssignment) {
+        this.id = UUID.randomUUID().toString();
+        this.vehicle = vehicle;
+        this.slotAssignment = slotAssignment;
+    }
+
+    public void checkOut() {
         exitTime = LocalDateTime.now();
         status = SessionStatus.COMPLETED;
+    }
+
+    public void checkIn() {
+        entryTime = LocalDateTime.now();
+        status = SessionStatus.ACTIVE;
+    }
+
+    public void setFee(BigDecimal fee) {
+        this.fee = fee;
     }
 
     public Duration getDuration() {

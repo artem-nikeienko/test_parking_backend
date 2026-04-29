@@ -1,7 +1,10 @@
 package org.test.parking.controller.response;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+
+import org.test.parking.domain.model.session.ParkingSession;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,4 +21,14 @@ public class CheckOutResponse {
     private LocalDateTime exitTime;
     private long durationMinutes;
     private BigDecimal fee;
+
+    public static CheckOutResponse mapFromSession(ParkingSession session) {
+        return CheckOutResponse.builder()
+            .licensePlate(session.getVehicle().getLicensePlate())
+            .entryTime(session.getEntryTime())
+            .exitTime(session.getExitTime())
+            .durationMinutes(Duration.between(session.getEntryTime(), session.getExitTime()).toMinutes())
+            .fee(session.getFee())
+            .build();
+    }
 }

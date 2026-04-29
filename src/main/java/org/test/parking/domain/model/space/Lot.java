@@ -9,7 +9,7 @@ import org.test.parking.domain.model.session.SlotAssignment;
 import org.test.parking.domain.model.session.SlotStatus;
 import org.test.parking.exception.ConflictException;
 import org.test.parking.exception.domain.LevelNotFoundException;
-import org.test.parking.exception.domain.RestrictedSlotOperationException;
+import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SlotNotFoundException;
 
 public class Lot {
@@ -35,29 +35,34 @@ public class Lot {
         return levels.values();
     }
 
-    public void occupySlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
-        getLevelOrThrow(levelNumber)
-            .occupySlot(slotId);
+    //TODO: add tests for this
+    public boolean hasOccupiedSlots() {
+        return levels.values().stream().anyMatch(Level::hasOccupiedSlots);
     }
 
-    public void releaseSlot(SlotAssignment slotAssignment) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
+    public void occupySlot(SlotAssignment slotAssignment) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
+        getLevelOrThrow(slotAssignment.getLevelNumber())
+            .occupySlot(slotAssignment.getSlotId());
+    }
+
+    public void releaseSlot(SlotAssignment slotAssignment) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
         getLevelOrThrow(slotAssignment.getLevelNumber())
             .releaseSlot(slotAssignment.getSlotId());
     }
 
     public int addLevel(int levelNumber) throws ConflictException {
         if(levels.containsKey(levelNumber)) {
-            throw new ConflictException(String.format("Level with number %d already exists in lot [%s]", levelNumber, name));
+            throw new ConflictException(String.format("Level with number [%d] already exists in lot [%s]", levelNumber, name));
         }
         Level newLevel = new Level(levelNumber);
         levels.put(levelNumber, newLevel);
         return newLevel.getNumber();
     }
 
-    public void removeLevel(int levelNumber) throws LevelNotFoundException, RestrictedSlotOperationException {
+    public void removeLevel(int levelNumber) throws LevelNotFoundException, RestrictedLotOperationException {
         Level level = getLevelOrThrow(levelNumber);
         if (level.hasOccupiedSlots()) {
-            throw new RestrictedSlotOperationException(String.format("Level [%d] in lot [%s] contains occupied slots and cannot be removed", levelNumber, name));
+            throw new RestrictedLotOperationException(String.format("Level [%d] in lot [%s] contains occupied slots and cannot be removed", levelNumber, name));
         }
         levels.remove(levelNumber);
     }
@@ -67,12 +72,12 @@ public class Lot {
             .addSlot(slotType);
     }
 
-    public void changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
+    public void changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
         getLevelOrThrow(levelNumber)
             .changeSlotStatus(slotId, slotStatus);
     }
 
-    public void removeSlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedSlotOperationException {
+    public void removeSlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
         getLevelOrThrow(levelNumber)
             .removeSlot(slotId);
     }
