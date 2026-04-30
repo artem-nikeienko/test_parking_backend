@@ -1,0 +1,56 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.14-SNAPSHOT'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org.test'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://repo.spring.io/snapshot' }
+}
+
+ext {
+	set('springModulithVersion', "1.4.10")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.springframework.modulith:spring-modulith-starter-core'
+	implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'jakarta.validation:jakarta.validation-api'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'org.springframework.modulith:spring-modulith-runtime'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+	testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

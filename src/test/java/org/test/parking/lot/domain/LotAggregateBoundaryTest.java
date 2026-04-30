@@ -1,0 +1,173 @@
+package org.test.parking.lot.domain;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.test.parking.exception.ConflictException;
+import org.test.parking.exception.domain.LevelNotFoundException;
+import org.test.parking.exception.domain.RestrictedLotOperationException;
+import org.test.parking.exception.domain.SlotNotFoundException;
+import org.test.parking.session.domain.SlotAssignment;
+import org.test.parking.session.domain.SlotStatus;
+
+public class LotAggregateBoundaryTest {
+
+    private Lot lot;
+
+    @BeforeEach
+    void setUp() {
+        lot = new Lot("Test Lot");
+    }
+
+    @Test()
+    void shouldAddLevelSuccessfully() {
+        int levelNumber = assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+
+        assertEquals(1, levelNumber);
+        assertEquals(1, lot.getLevels().size());
+    }
+
+    @Test
+    void shouldAddSlotSuccessfully() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+
+        assertEquals(1, slotId);
+    }
+
+    @Test
+    void shouldOccupyAndReleaseSlotSuccessfully() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, slotId, SlotType.COMPACT);
+
+        assertDoesNotThrow(() -> 
+            lot.occupySlot(assignment));
+        
+        assertThat(lot.hasOccupiedSlots());
+
+        Throwable ex2 = assertThrows(RestrictedLotOperationException.class,
+            () -> lot.removeSlot(1, slotId));
+        assertEquals("Slot with id [1] in level [1] is occupied and cannot be removed", ex2.getMessage());
+
+        assertDoesNotThrow(() -> 
+            lot.releaseSlot(assignment));
+
+        assertDoesNotThrow(() -> lot.removeSlot(1, slotId));
+    }
+
+    @Test
+    void shouldRemoveEmptyLevel() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+
+        assertDoesNotThrow(() -> 
+            lot.removeLevel(1));
+
+        //TODO: Get rid off such Aggreagate leaks as lot.getLevels() just for size
+        assertEquals(0, lot.getLevels().size());
+    }
+
+    @Test
+    void shouldThrowWhenAddingDuplicateLevel() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+
+        Throwable ex = assertThrows(ConflictException.class,
+            () -> lot.addLevel(1));
+        assertEquals("Level with number [1] already exists in lot [Test Lot]", ex.getMessage());
+    }
+
+    @Test
+    void shouldPreventRemovingLevelWithOccupiedSlots() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, slotId, SlotType.COMPACT);
+
+        assertDoesNotThrow(() -> 
+            lot.occupySlot(assignment));
+
+        Throwable ex = assertThrows(RestrictedLotOperationException.class,
+            () -> lot.removeLevel(1));
+    }
+
+    @Test
+    void shouldThrowWhenLevelNotFound() {
+        Throwable ex = assertThrows(LevelNotFoundException.class,
+            () -> lot.addSlot(999, SlotType.COMPACT));
+    }
+
+    @Test
+    void shouldThrowWhenSlotNotFound() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, 999, SlotType.COMPACT);
+
+        Throwable ex = assertThrows(SlotNotFoundException.class,
+            () -> lot.occupySlot(assignment));
+    }
+
+    @Test
+    void shouldThrowWhenRemovingMissingLevel() {
+        Throwable ex = assertThrows(LevelNotFoundException.class,
+            () -> lot.removeLevel(1));
+    }
+
+    @Test
+    void shouldMaintainConsistencyAfterOccupyReleaseCycle() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, slotId, SlotType.COMPACT);
+        
+        assertDoesNotThrow(() -> 
+            lot.occupySlot(assignment));
+        assertDoesNotThrow(() -> 
+            lot.releaseSlot(assignment));
+
+        assertDoesNotThrow(() -> lot.removeSlot(1, slotId));
+    }
+
+    @Test
+    void shouldHandleSlotStatusTransitions() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, slotId, SlotType.COMPACT);
+        
+        assertDoesNotThrow(() -> 
+            lot.changeSlotStatus(1, slotId, SlotStatus.UNAVAILABLE));
+        assertDoesNotThrow(() -> 
+            lot.changeSlotStatus(1, slotId, SlotStatus.AVAILABLE));
+
+        assertDoesNotThrow(() -> lot.occupySlot(assignment));
+    }
+
+    @Test
+    void shouldNotAllowRemovingOccupiedSlot() {
+        assertDoesNotThrow(() -> 
+            lot.addLevel(1));
+        int slotId = assertDoesNotThrow(() -> 
+            lot.addSlot(1, SlotType.COMPACT));
+        SlotAssignment assignment = new SlotAssignment(lot.getId(), 1, slotId, SlotType.COMPACT);
+
+        assertDoesNotThrow(() -> 
+            lot.occupySlot(assignment));
+
+        Throwable ex = assertThrows(RestrictedLotOperationException.class,
+            () -> lot.removeSlot(1, slotId));
+    }
+}
