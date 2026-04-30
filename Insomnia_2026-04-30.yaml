@@ -1,0 +1,397 @@
+type: collection.insomnia.rest/5.0
+name: Scratch Pad
+meta:
+  id: wrk_scratchpad
+  created: 1748416833409
+  modified: 1748416833409
+  description: ""
+collection:
+  - name: gateway
+    meta:
+      id: fld_6439809c543e4100ad6bd4d7777db913
+      created: 1749722620891
+      modified: 1762265581115
+      sortKey: -1749722620891
+      description: ""
+  - name: worker
+    meta:
+      id: fld_46a5f1573ef9468f8292db5c8e005da9
+      created: 1749722640962
+      modified: 1762265579371
+      sortKey: -1749722640962
+      description: ""
+  - name: KTE
+    meta:
+      id: fld_a0aa1b219e134169ae8a46c921e2b5ce
+      created: 1762265602331
+      modified: 1762265602331
+      sortKey: -1762265602331
+      description: ""
+  - name: Parking
+    meta:
+      id: fld_bdb504812a904bc9b1c078474a0ebdf4
+      created: 1777486805176
+      modified: 1777498890250
+      sortKey: -1777486805176
+      description: ""
+    children:
+      - url: http://localhost:8080/api/v1/parking/lots
+        name: CreateLot
+        meta:
+          id: req_656a17ae8c4d4d8497f66798dc3a3a86
+          created: 1777314143266
+          modified: 1777497968719
+          isPrivate: false
+          description: ""
+          sortKey: -1777486830806
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"name": "lot4"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |
+            if (insomnia.response.code === 201) {
+            	const body = JSON.parse(insomnia.response.body);
+            	insomnia.environment.set("newLotId", body.createdEntityId);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels
+        name: CreateLevel
+        meta:
+          id: req_784c7e5c3f6c440486c26ccca0a23525
+          created: 1777486839134
+          modified: 1777497981531
+          isPrivate: false
+          description: ""
+          sortKey: -1771743200060
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"number": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 201) {
+            	const body = JSON.parse(insomnia.response.body);
+            	insomnia.environment.set("newLevelNumber", body.createdEntityId);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
+          _.newLevelNumber }}/slots
+        name: CreateSlot
+        meta:
+          id: req_810ffe39c0a246ba80a7e7d1ce9d9619
+          created: 1777490424009
+          modified: 1777497990470
+          isPrivate: false
+          description: ""
+          sortKey: -1768871384687
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"number": 1,
+            	"type": "LARGE"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 201) {	
+            	const body = JSON.parse(insomnia.response.body);
+            	insomnia.environment.set("newSlotId", body.createdEntityId);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}
+        name: DeleteLot
+        meta:
+          id: req_8c63c37f6aa846b0a56b949c80c747f2
+          created: 1777491300225
+          modified: 1777498952581
+          isPrivate: false
+          description: ""
+          sortKey: -1774615015433
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 200) {
+            	insomnia.environment.set("newLotId", "");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
+          _.newLevelNumber }}
+        name: DeleteLevel
+        meta:
+          id: req_42ddf81c297e4d609f6059d8c220dd09
+          created: 1777491440108
+          modified: 1777499008743
+          isPrivate: false
+          description: ""
+          sortKey: -1770307292373.5
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"number": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 200) {
+            	insomnia.environment.set("newLevelNumber", "");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
+          _.newLevelNumber }}/slots/{{ _.newSlotId }}
+        name: DeleteSlot
+        meta:
+          id: req_42e74e36651b416bb643b04add3d0952
+          created: 1777491647259
+          modified: 1777498999804
+          isPrivate: false
+          description: ""
+          sortKey: -1767435477000.5
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"number": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 200) {
+            	insomnia.environment.set("newSlotId", "");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/sessions/lots/{{ _.newLotId }}
+        name: ParkingCheckIn
+        meta:
+          id: req_9a0013ed3bd54cbab15fb4442ee1ee1f
+          created: 1777492439318
+          modified: 1777497996851
+          isPrivate: false
+          description: ""
+          sortKey: -1767435476900.5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"vehicle": {
+            		"licensePlate": "AA1234BE",
+            		"type": "CAR"
+            	}
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: |-
+            if (insomnia.response.code === 201) {
+            	const body = JSON.parse(insomnia.response.body);
+            	insomnia.environment.set("newSessionId", body.id);
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/sessions/{{ _.newSessionId }}/check-out
+        name: ParkingCheckOut
+        meta:
+          id: req_3ebeff3f091f4031b6aebdbdf1d9e62a
+          created: 1777492731694
+          modified: 1777494242709
+          isPrivate: false
+          description: ""
+          sortKey: -1766717523107.25
+        method: POST
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/sessions/lots/{{ _.newLotId }}
+        name: GetActiveParkingSessions
+        meta:
+          id: req_9dfac6f99596466b8af61dbf982be495
+          created: 1777493603549
+          modified: 1777494186466
+          isPrivate: false
+          description: ""
+          sortKey: -1766358546210.625
+        method: GET
+        body:
+          mimeType: application/json
+          text: ""
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        scripts:
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
+          _.newLevelNumber }}/slots/{{ _.newSlotId }}
+        name: ChangeSlotStatus
+        meta:
+          id: req_634430a0e1c44ee5bcc48027e3a26e55
+          created: 1777494420837
+          modified: 1777497178512
+          isPrivate: false
+          description: ""
+          sortKey: -1767435476950.5
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"statsus": "UNAVAILABLE"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    scripts:
+      afterResponse: ""
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_99d30891da4bdcebc63947a8fc17f076de878684
+    created: 1748416948570
+    modified: 1777498442693
+  cookies:
+    - id: ef632dbf-51b7-4cee-a90b-6f1c0b53c4c0
+      key: foo
+      value: bar
+      domain: domain.com
+      path: /
+      secure: false
+      httpOnly: false
+environments:
+  name: Base Environment
+  meta:
+    id: env_99d30891da4bdcebc63947a8fc17f076de878684
+    created: 1748416948470
+    modified: 1777498442695
+    isPrivate: false
+  data:
+    newSlotId: "1"
+    newSessionId: 0dca83bb-6211-4875-8533-89fe876004b4
+    newLevelNumber: "1"
+    newLotId: 1c325db1-aa33-4f22-ba02-bd4fc7645b7d
