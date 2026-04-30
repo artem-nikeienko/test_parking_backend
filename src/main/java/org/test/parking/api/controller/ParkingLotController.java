@@ -42,7 +42,6 @@ public class ParkingLotController {
 
     @PostMapping("/lots")
     public ResponseEntity<CreateOperationResponse> createLot(@Valid @RequestBody LotCreateRequest request) throws ConflictException {
-        //ASSUMPTION: Request object stays at the Controller layer, Service layer gets only its attributes needed for business logic to avoid excessive coupling between layers.
         String lotId = spaceService.addLot(request.getName());
         URI location = ServletUriComponentsBuilder
             .fromCurrentRequest()

@@ -73,7 +73,6 @@ public class LotAggregateBoundaryTest {
         assertDoesNotThrow(() -> 
             lot.removeLevel(1));
 
-        //TODO: Get rid off such Aggreagate leaks as lot.getLevels() just for size
         assertEquals(0, lot.getLevels().size());
     }
 

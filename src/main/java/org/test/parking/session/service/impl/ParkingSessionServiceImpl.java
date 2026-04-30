@@ -100,7 +100,6 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
     private ParkingSession tryToCheckInNewSession(Vehicle vehicle, SlotAssignment slotAssignment) {
         ParkingSession session = new ParkingSession(vehicle, slotAssignment);
         session.checkIn();
-        //ASSUMPTION: in real production we should have rollback of slot assignment in case the session hasn't been saved properly. There is @Transactional for such purpose.
         return sessionRepo.save(session);
     }
 
@@ -123,9 +122,6 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
             sessionLot.releaseSlot(session.getSlotAssignment());
             lotRepo.save(sessionLot);
         } catch (DomainException e) {
-            // This is a very rare case indicating potential data integrity issues that should be investigated,
-            // but we still want to return checkout response with fee and timing details, so we log the error and continue without throwing exception further.
-            // In real application, we would use a logger here to log the error with sessionId and lotId for further investigation.
             System.err.println(String.format("Error during slot release for session [%s]: %s", session.getId(), e.getMessage()));
         }
     }
