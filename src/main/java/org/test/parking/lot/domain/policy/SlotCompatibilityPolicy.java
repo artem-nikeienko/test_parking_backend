@@ -1,6 +1,6 @@
 package org.test.parking.lot.domain.policy;
 
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.vehicle.domain.Vehicle;
 
 /**
@@ -18,5 +18,5 @@ public interface SlotCompatibilityPolicy {
      * @param slot parking slot candidate
      * @return true if compatible, false otherwise
      */
-    boolean isCompatible(Slot slot, Vehicle vehicle);
+    boolean isCompatible(SlotDto slot, Vehicle vehicle);
 }

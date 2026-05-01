@@ -12,21 +12,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.test.parking.api.dto.CompletedSessionDto;
+import org.test.parking.api.dto.NewParkingSessionDto;
+import org.test.parking.api.dto.ParkingSessionDto;
 import org.test.parking.api.request.CheckInRequest;
-import org.test.parking.api.response.CheckOutResponse;
-import org.test.parking.api.response.ParkingSessionResponse;
-import org.test.parking.exception.ConflictException;
 import org.test.parking.exception.NotFoundException;
 import org.test.parking.exception.domain.DomainException;
-import org.test.parking.exception.domain.LotNotFoundException;
-import org.test.parking.exception.domain.SessionAlreadyCompletedException;
 import org.test.parking.exception.domain.SessionNotFoundException;
 import org.test.parking.session.domain.ParkingSession;
 import org.test.parking.session.service.ParkingSessionService;
 
 import jakarta.validation.Valid;
 
-//TODO: Add HATEOAS links
 @RestController
 @Validated
 @RequestMapping("/api/v1/sessions")
@@ -39,42 +36,35 @@ public class SessionController {
     }
 
     @PostMapping("/lots/{lotId}")
-    public ResponseEntity<ParkingSessionResponse> checkIn(
+    public ResponseEntity<NewParkingSessionDto> checkIn(
             @PathVariable String lotId,
             @Valid @RequestBody CheckInRequest req
-    ) throws NotFoundException {
-        try {
-            ParkingSession session = service.checkIn(lotId, req.getVehicle());
-            URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{sessionId}")
-                .buildAndExpand(session.getId())
-                .toUri();
-            return ResponseEntity.created(location).body(ParkingSessionResponse.success(session));
-        } catch (LotNotFoundException e) {
-            throw new NotFoundException(e.getMessage());
-        } catch (DomainException e) {
-            //TODO: handle exceptions properly, e.g. log them, emit events, etc.
-            return ResponseEntity.ok(ParkingSessionResponse.failed(e.getMessage()));
-        }
+    ) throws DomainException {
+        ParkingSession session = service.checkIn(lotId, req.getVehicle());
+        URI location = ServletUriComponentsBuilder
+            .fromCurrentRequest()
+            .path("/{sessionId}")
+            .buildAndExpand(session.getId())
+            .toUri();
+        return ResponseEntity.created(location)
+            .body(NewParkingSessionDto.from(session));
     }
 
     @GetMapping("/lots/{lotId}")
-    public List<ParkingSessionResponse> getActive(@PathVariable String lotId) {
-        return service.getActiveSessions(lotId).stream()
-                .map(ParkingSessionResponse::success)
+    public ResponseEntity<List<ParkingSessionDto>> getActive(@PathVariable String lotId) {
+        var responseList = service.getActiveSessions(lotId).stream()
+                .map(ParkingSessionDto::from)
                 .toList();
+        return ResponseEntity.ok(responseList);
     }
 
     @PostMapping("/{sessionId}/check-out")
-    public ResponseEntity<CheckOutResponse> checkOut(@PathVariable String sessionId) throws NotFoundException, ConflictException {
+    public ResponseEntity<CompletedSessionDto> checkOut(@PathVariable String sessionId) throws NotFoundException, DomainException {
         try {
             ParkingSession completedSession = service.checkOut(sessionId);
-            return ResponseEntity.ok(CheckOutResponse.mapFromSession(completedSession));
+            return ResponseEntity.ok(CompletedSessionDto.mapFromSession(completedSession));
         } catch (SessionNotFoundException e) {
             throw new NotFoundException(e.getMessage());
-        } catch (SessionAlreadyCompletedException e) {
-            throw new ConflictException(e.getMessage());
         }
     }
 }

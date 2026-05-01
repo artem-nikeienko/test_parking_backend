@@ -65,4 +65,9 @@ public interface LotRepository {
       * @return List of lots.
       */
      List<Lot> findAll();
+
+     /**
+      * Clears repository (for testing purposes)
+      */
+     void deleteAll();
 }

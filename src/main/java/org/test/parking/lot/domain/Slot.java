@@ -7,7 +7,6 @@ import lombok.Getter;
 
 @Getter
 public class Slot {
-    //TODO: Provide Value Objects as IDs for better type safety and encapsulation, e.g. SlotId, LevelId, etc.
     private final int id;
     private final int levelNumber;
     private final SlotType type;
@@ -41,11 +40,18 @@ public class Slot {
         status = SlotStatus.UNAVAILABLE;
     }
 
-    public boolean isUnavailable() {
+    protected void delete() throws RestrictedLotOperationException {
+        if (isOccupied()) {
+            throw new RestrictedLotOperationException(String.format("Cannot mark slot [%d] in level [%d] as out of service because it is currently occupied", id, levelNumber));
+        }
+        status = SlotStatus.UNAVAILABLE;
+    }
+
+    protected boolean isUnavailable() {
         return status != SlotStatus.AVAILABLE;
     }
 
-    public boolean isOccupied() {
+    protected boolean isOccupied() {
         return status == SlotStatus.OCCUPIED;
     }
 }

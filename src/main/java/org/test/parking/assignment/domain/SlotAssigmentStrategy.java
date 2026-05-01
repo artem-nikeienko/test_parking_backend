@@ -1,15 +1,8 @@
 package org.test.parking.assignment.domain;
 
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.vehicle.domain.Vehicle;
 
-//TODO: See if we can move '/fee' and '/slot' to '/service'
-//TODO: Add some more strategies based on level number etc.
-//ASSUMPTION: Instead of passing internal collections like List<Slot>
-//  into the strategy, I moved the iteration logic inside the aggregate
-//  and turned the strategy into a comparison policy (isBetter).
-//  This keeps the aggregate in full control of its invariants and
-//  prevents leaking internal structure, which aligns with DDD principles.
 public interface SlotAssigmentStrategy {
     
 /**
@@ -37,5 +30,5 @@ public interface SlotAssigmentStrategy {
  * - This method does not perform selection directly, but participates in a selection process
  *   controlled by the aggregate.
  */
-    boolean isBetter(Slot candidate, Slot currentBest, Vehicle vehicle);
+    boolean isBetter(SlotDto candidate, SlotDto currentBest, Vehicle vehicle);
 }

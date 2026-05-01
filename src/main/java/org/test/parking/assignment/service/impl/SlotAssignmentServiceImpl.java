@@ -30,7 +30,6 @@ public class SlotAssignmentServiceImpl implements SlotAssignmentService {
     public SlotAssignment assignSlot(Lot lot, Vehicle vehicle)
             throws NoAvailableSlotsException {
 
-        //ASSUME: this synchronized for Lot Aggregate must be enough to guarantee thread-safe consistent behavior
         synchronized (lot) {
             
             Optional<SlotAssignment> optSlotAssignment = slotQueryService.findBestSlot(lot, vehicle);

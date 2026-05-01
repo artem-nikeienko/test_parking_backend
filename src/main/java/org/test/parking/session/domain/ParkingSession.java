@@ -21,7 +21,6 @@ public class ParkingSession {
 
     private SessionStatus status;
 
-    //ASSUMPTION: BigDecimal is more preferable for financial calcultaions of decimal values than Double because of its accuracy.
     private BigDecimal fee;
 
     public ParkingSession(Vehicle vehicle, SlotAssignment slotAssignment) {

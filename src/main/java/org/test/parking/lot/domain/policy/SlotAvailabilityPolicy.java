@@ -1,6 +1,6 @@
 package org.test.parking.lot.domain.policy;
 
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.vehicle.domain.Vehicle;
 
 /**
@@ -14,7 +14,6 @@ import org.test.parking.vehicle.domain.Vehicle;
  */
 public interface SlotAvailabilityPolicy {
 
-    //ASSUMPTION: This policy may be extended to let some vehicles be able to park in occupied or unavailable slots, for example, if the slot is occupied by a motorcycle and the vehicle is another bike, it may be allowed to park there.
     /**
      * Determines whether the given slot can be used by the specified vehicle.
      *
@@ -22,5 +21,5 @@ public interface SlotAvailabilityPolicy {
      * @param vehicle vehicle requesting the slot
      * @return true if the slot is considered available, false otherwise
      */
-    boolean isAvailable(Slot slot, Vehicle vehicle);
+    boolean isAvailable(SlotDto slot, Vehicle vehicle);
 }

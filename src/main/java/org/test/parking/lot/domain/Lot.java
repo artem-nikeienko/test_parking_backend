@@ -1,11 +1,12 @@
 package org.test.parking.lot.domain;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.test.parking.exception.ConflictException;
+import org.test.parking.exception.domain.ConflictException;
 import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SlotNotFoundException;
@@ -31,11 +32,13 @@ public class Lot {
         return name;
     }
 
-    public Collection<Level> getLevels() {
-        return levels.values();
+    public List<LevelDto> getLevels() {
+        return levels.values().stream()
+            .map(LevelDto::from)
+            .sorted((a,b) -> a.getNumber() - b.getNumber())
+            .collect(Collectors.toList());
     }
 
-    //TODO: add tests for this
     public boolean hasOccupiedSlots() {
         return levels.values().stream().anyMatch(Level::hasOccupiedSlots);
     }
@@ -50,35 +53,37 @@ public class Lot {
             .releaseSlot(slotAssignment.getSlotId());
     }
 
-    public int addLevel(int levelNumber) throws ConflictException {
+    public LevelDto addLevel(int levelNumber) throws ConflictException {
         if(levels.containsKey(levelNumber)) {
             throw new ConflictException(String.format("Level with number [%d] already exists in lot [%s]", levelNumber, name));
         }
-        Level newLevel = new Level(levelNumber);
+        Level newLevel = new Level(levelNumber, id);
         levels.put(levelNumber, newLevel);
-        return newLevel.getNumber();
+        return LevelDto.from(newLevel);
     }
 
-    public void removeLevel(int levelNumber) throws LevelNotFoundException, RestrictedLotOperationException {
+    public LevelDto removeLevel(int levelNumber) throws LevelNotFoundException, RestrictedLotOperationException {
         Level level = getLevelOrThrow(levelNumber);
         if (level.hasOccupiedSlots()) {
             throw new RestrictedLotOperationException(String.format("Level [%d] in lot [%s] contains occupied slots and cannot be removed", levelNumber, name));
         }
-        levels.remove(levelNumber);
+        Level removedLevel = levels.remove(levelNumber);
+        return LevelDto.from(removedLevel);
     }
 
-    public int addSlot(int levelNumber, SlotType slotType) throws LevelNotFoundException {
-        return getLevelOrThrow(levelNumber)
+    public SlotDto addSlot(int levelNumber, SlotType slotType) throws LevelNotFoundException {
+        SlotDto addedSlot = getLevelOrThrow(levelNumber)
             .addSlot(slotType);
+        return addedSlot;
     }
 
-    public void changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
-        getLevelOrThrow(levelNumber)
+    public SlotDto changeSlotStatus(int levelNumber, int slotId, SlotStatus slotStatus) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
+        return getLevelOrThrow(levelNumber)
             .changeSlotStatus(slotId, slotStatus);
     }
 
-    public void removeSlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
-        getLevelOrThrow(levelNumber)
+    public SlotDto removeSlot(int levelNumber, int slotId) throws LevelNotFoundException, SlotNotFoundException, RestrictedLotOperationException {
+        return getLevelOrThrow(levelNumber)
             .removeSlot(slotId);
     }
 

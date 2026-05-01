@@ -43,4 +43,9 @@ public class InMemorySessionRepository implements SessionRepository {
             .forEach(res::add);
         return res;
     }
+
+    @Override
+    public void deleteAll() {
+        store.clear();
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.test.parking.api.response.ErrorResponse;
+import org.test.parking.exception.domain.DomainException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -16,9 +17,9 @@ public class GlobalExceptionHandler {
         return new ErrorResponse("NOT_FOUND", e);
     }
 
-    @ExceptionHandler(ConflictException.class)
+    @ExceptionHandler(DomainException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse conflict(ConflictException e) {
+    public ErrorResponse conflict(DomainException e) {
         return new ErrorResponse("CONFLICT", e);
     }
 

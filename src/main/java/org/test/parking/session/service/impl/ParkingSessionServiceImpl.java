@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.test.parking.assignment.service.SlotAssignmentService;
 import org.test.parking.exception.domain.DomainException;
+import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
 import org.test.parking.exception.domain.NoAvailableSlotsException;
 import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SessionAlreadyCompletedException;
 import org.test.parking.exception.domain.SessionNotFoundException;
+import org.test.parking.exception.domain.SlotNotFoundException;
 import org.test.parking.exception.domain.VehicleParkedException;
 import org.test.parking.lot.domain.Lot;
 import org.test.parking.lot.repository.LotRepository;
@@ -63,7 +65,7 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
     public ParkingSession checkOut(String sessionId)
       throws SessionNotFoundException, SessionAlreadyCompletedException {
         ParkingSession session = sessionRepo.findById(sessionId)
-            .orElseThrow(() -> new SessionNotFoundException("Session not found"));
+            .orElseThrow(() -> new SessionNotFoundException(sessionId));
         
         throwIfCompleted(session);
 
@@ -100,7 +102,6 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
     private ParkingSession tryToCheckInNewSession(Vehicle vehicle, SlotAssignment slotAssignment) {
         ParkingSession session = new ParkingSession(vehicle, slotAssignment);
         session.checkIn();
-        //ASSUMPTION: in real production we should have rollback of slot assignment in case the session hasn't been saved properly. There is @Transactional for such purpose.
         return sessionRepo.save(session);
     }
 
@@ -123,9 +124,6 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
             sessionLot.releaseSlot(session.getSlotAssignment());
             lotRepo.save(sessionLot);
         } catch (DomainException e) {
-            // This is a very rare case indicating potential data integrity issues that should be investigated,
-            // but we still want to return checkout response with fee and timing details, so we log the error and continue without throwing exception further.
-            // In real application, we would use a logger here to log the error with sessionId and lotId for further investigation.
             System.err.println(String.format("Error during slot release for session [%s]: %s", session.getId(), e.getMessage()));
         }
     }

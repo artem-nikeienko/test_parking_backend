@@ -43,4 +43,9 @@ public class InMemoryLotRepository implements LotRepository {
     public List<Lot> findAll() {
         return new ArrayList<>(store.values());
     }
+
+    @Override
+    public void deleteAll() {
+        store.clear();
+    }
 }

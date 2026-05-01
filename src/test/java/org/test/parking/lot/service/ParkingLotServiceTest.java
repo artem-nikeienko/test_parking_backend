@@ -8,12 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.test.parking.exception.ConflictException;
+import org.test.parking.exception.domain.ConflictException;
 import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
-import org.test.parking.lot.domain.Level;
+import org.test.parking.lot.domain.LevelDto;
 import org.test.parking.lot.domain.Lot;
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.LotDto;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.lot.domain.SlotType;
 import org.test.parking.lot.repository.LotRepository;
 import org.test.parking.lot.repository.impl.InMemoryLotRepository;
@@ -35,41 +36,41 @@ public class ParkingLotServiceTest {
     void shouldCreateLot() throws Exception {
         // given
         // when
-        String lotId = service.addLot("Lot A");
+        LotDto lot = service.addLot("Lot A");
 
         // then
-        assertNotNull(lotId);
+        assertNotNull(lot.getId());
         // assertEquals(name, lot.getName());
 
-        assertTrue(lotRepository.findById(lotId).isPresent());
+        assertTrue(lotRepository.findById(lot.getId()).isPresent());
     }
 
     @Test
     void shouldAddLevelToLot() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
+        LotDto lot = service.addLot("Lot A");
 
         // when
-        int levelNumber = service.addLevel(lotId, 1);
+        LevelDto addedLevel = service.addLevel(lot.getId(), 1);
 
         // then
-        Lot updated = lotRepository.findById(lotId).orElseThrow();
+        Lot updated = lotRepository.findById(lot.getId()).orElseThrow();
         assertEquals(1, updated.getLevels().size());
-        assertEquals(1, levelNumber);
+        assertEquals(1, addedLevel.getNumber());
     }
 
     @Test
     void shouldAddSlotToLevel() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
-        service.addLevel(lotId, 1);
+        LotDto lot = service.addLot("Lot A");
+        service.addLevel(lot.getId(), 1);
 
         // when
-        int slotId = service.addSlot(lotId, 1, SlotType.COMPACT);
+        SlotDto slot = service.addSlot(lot.getId(), 1, SlotType.COMPACT);
 
         // then
-        Lot updated = lotRepository.findById(lotId).orElseThrow();
-        Level level = updated.getLevels().stream().findFirst().get();
+        Lot updated = lotRepository.findById(lot.getId()).orElseThrow();
+        LevelDto level = updated.getLevels().get(0);
 
         assertEquals(1, level.getSlots().size());
     }
@@ -77,36 +78,36 @@ public class ParkingLotServiceTest {
     @Test
     void shouldNotAllowDuplicateLevelNumber() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
-        service.addLevel(lotId, 1);
+        LotDto lot = service.addLot("Lot A");
+        service.addLevel(lot.getId(), 1);
 
         assertThrows(ConflictException.class, () ->
-            service.addLevel(lotId, 1)
+            service.addLevel(lot.getId(), 1)
         );
     }
 
     @Test
     void shouldFailWhenLevelNotExists() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
+        LotDto lot = service.addLot("Lot A");
 
         assertThrows(LevelNotFoundException.class, () ->
-            service.addSlot(lotId, 999, SlotType.COMPACT)
+            service.addSlot(lot.getId(), 999, SlotType.COMPACT)
         );
     }
 
     @Test
     void shouldUpdateSlotStatus() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
-        service.addLevel(lotId, 1);
-        int slotId = service.addSlot(lotId, 1, SlotType.COMPACT);
+        LotDto lot = service.addLot("Lot A");
+        service.addLevel(lot.getId(), 1);
+        SlotDto slot = service.addSlot(lot.getId(), 1, SlotType.COMPACT);
 
         // when
-        service.changeSlotStatus(lotId, 1, slotId, SlotStatus.UNAVAILABLE);
+        service.changeSlotStatus(lot.getId(), 1, slot.getId(), SlotStatus.UNAVAILABLE);
 
         // then
-        Slot updated = lotRepository.findById(lotId)
+        SlotDto updated = lotRepository.findById(lot.getId())
             .orElseThrow()
             .getLevels().iterator().next()
             .getSlots().iterator().next();
@@ -124,10 +125,10 @@ public class ParkingLotServiceTest {
     @Test
     void shouldThrowWhenDeletingNonExistingLevel() throws Exception {
         // given
-        String lotId = service.addLot("Lot A");
+        LotDto lot = service.addLot("Lot A");
 
         assertThrows(LevelNotFoundException.class, () ->
-            service.removeLevel(lotId, 1)
+            service.removeLevel(lot.getId(), 1)
         );
     }
 }
