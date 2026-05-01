@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.test.parking.assignment.service.SlotAssignmentService;
 import org.test.parking.exception.domain.DomainException;
+import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
 import org.test.parking.exception.domain.NoAvailableSlotsException;
 import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SessionAlreadyCompletedException;
 import org.test.parking.exception.domain.SessionNotFoundException;
+import org.test.parking.exception.domain.SlotNotFoundException;
 import org.test.parking.exception.domain.VehicleParkedException;
 import org.test.parking.lot.domain.Lot;
 import org.test.parking.lot.repository.LotRepository;
@@ -63,7 +65,7 @@ public class ParkingSessionServiceImpl implements ParkingSessionService {
     public ParkingSession checkOut(String sessionId)
       throws SessionNotFoundException, SessionAlreadyCompletedException {
         ParkingSession session = sessionRepo.findById(sessionId)
-            .orElseThrow(() -> new SessionNotFoundException("Session not found"));
+            .orElseThrow(() -> new SessionNotFoundException(sessionId));
         
         throwIfCompleted(session);
 

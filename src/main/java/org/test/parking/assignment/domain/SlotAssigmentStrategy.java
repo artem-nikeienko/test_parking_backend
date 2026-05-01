@@ -1,6 +1,6 @@
 package org.test.parking.assignment.domain;
 
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.vehicle.domain.Vehicle;
 
 public interface SlotAssigmentStrategy {
@@ -30,5 +30,5 @@ public interface SlotAssigmentStrategy {
  * - This method does not perform selection directly, but participates in a selection process
  *   controlled by the aggregate.
  */
-    boolean isBetter(Slot candidate, Slot currentBest, Vehicle vehicle);
+    boolean isBetter(SlotDto candidate, SlotDto currentBest, Vehicle vehicle);
 }

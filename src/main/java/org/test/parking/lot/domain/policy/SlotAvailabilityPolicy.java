@@ -1,6 +1,6 @@
 package org.test.parking.lot.domain.policy;
 
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.vehicle.domain.Vehicle;
 
 /**
@@ -21,5 +21,5 @@ public interface SlotAvailabilityPolicy {
      * @param vehicle vehicle requesting the slot
      * @return true if the slot is considered available, false otherwise
      */
-    boolean isAvailable(Slot slot, Vehicle vehicle);
+    boolean isAvailable(SlotDto slot, Vehicle vehicle);
 }

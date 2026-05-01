@@ -1,4 +1,4 @@
-package org.test.parking.api.response;
+package org.test.parking.api.dto;
 
 import java.time.LocalDateTime;
 
@@ -7,36 +7,31 @@ import org.test.parking.session.domain.SessionStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ParkingSessionResponse {
+@Getter
+public class NewParkingSessionDto {
     private String id;
     private SessionStatus status;
     private String licensePlate;
-    private String slotId;
-    private String levelId;
     private String lotId;
+    private int levelNumber;
+    private int slotId;
     private LocalDateTime entryTime;
-    private String errorMessage;
 
-    public static ParkingSessionResponse success(ParkingSession session) {
-        return ParkingSessionResponse.builder()
+    public static NewParkingSessionDto from(ParkingSession session) {
+        return NewParkingSessionDto.builder()
             .id(session.getId())
             .status(session.getStatus())
             .licensePlate(session.getVehicle().getLicensePlate())
             .lotId(session.getSlotAssignment().getLotId())
-            .levelId(session.getSlotAssignment().getLevelNumber().toString())
-            .slotId(session.getSlotAssignment().getSlotId().toString())
+            .levelNumber(session.getSlotAssignment().getLevelNumber())
+            .slotId(session.getSlotAssignment().getSlotId())
             .entryTime(session.getEntryTime())
-            .build();
-    }
-
-    public static ParkingSessionResponse failed(String errorMessage) {
-        return ParkingSessionResponse.builder()
-            .errorMessage(errorMessage)
             .build();
     }
 }

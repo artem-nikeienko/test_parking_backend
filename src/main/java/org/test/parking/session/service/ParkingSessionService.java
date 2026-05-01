@@ -43,7 +43,6 @@ public interface ParkingSessionService {
      * @throws SessionNotFoundException if the session does not exist.
      * @throws SessionAlreadyCompletedException if the session is already completed.
      */
-    //TODO: replace Controller level Response with domain level parameters
     ParkingSession checkOut(String sessionId)
         throws SessionNotFoundException, SessionAlreadyCompletedException;
 

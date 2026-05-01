@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 
+import org.test.parking.lot.domain.Level;
+
 @Service
 public class FeeServiceImpl implements FeeService {
 

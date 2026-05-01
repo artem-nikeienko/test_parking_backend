@@ -5,9 +5,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.test.parking.assignment.domain.SlotAssigmentStrategy;
 import org.test.parking.assignment.query.SlotQueryService;
-import org.test.parking.lot.domain.Level;
+import org.test.parking.lot.domain.LevelDto;
 import org.test.parking.lot.domain.Lot;
-import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.lot.domain.policy.SlotAvailabilityPolicy;
 import org.test.parking.lot.domain.policy.SlotCompatibilityPolicy;
 import org.test.parking.session.domain.SlotAssignment;
@@ -31,12 +31,11 @@ public class FindAvailableAndCompatibleSlotQueryService implements SlotQueryServ
     }
 
     @Override
-    //TODO: try to avoid of iterating over aggregate by getting its components. Maybe use ligtweight read models for that, with ObjectValue as ID instead of Slot itself
     public Optional<SlotAssignment> findBestSlot(Lot lot, Vehicle vehicle) {
-        Slot best = null;
+        SlotDto best = null;
 
-        for (Level level : lot.getLevels()) {
-            for (Slot slot : level.getSlots()) {
+        for (LevelDto level : lot.getLevels()) {
+            for (SlotDto slot : level.getSlots()) {
                 if (availabilityPolicy.isAvailable(slot, vehicle) &&
                     compatibilityPolicy.isCompatible(slot, vehicle) &&
                     strategy.isBetter(slot, best, vehicle)

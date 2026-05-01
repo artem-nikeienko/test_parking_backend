@@ -50,4 +50,9 @@ public interface SessionRepository {
      * @return List of active sessions.
      */
     List<ParkingSession> findAllActive(String lotId);
+
+    /**
+     * Clears repository (for testing purposes)
+     */
+    void deleteAll();
 }

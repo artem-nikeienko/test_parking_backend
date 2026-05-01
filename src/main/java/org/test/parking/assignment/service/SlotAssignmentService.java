@@ -14,7 +14,6 @@ import org.test.parking.vehicle.domain.Vehicle;
  */
 public interface SlotAssignmentService {
 
-    //mutates Slot within the Lot aggregate, so it should be transactional and handle concurrency at the aggregate level
     /**
      * Assigns a parking slot to the given vehicle.
      *

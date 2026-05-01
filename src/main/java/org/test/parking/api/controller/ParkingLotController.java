@@ -16,15 +16,15 @@ import org.test.parking.api.request.LevelCreateRequest;
 import org.test.parking.api.request.LotCreateRequest;
 import org.test.parking.api.request.SlotCreateRequest;
 import org.test.parking.api.request.SlotUpdateRequest;
-import org.test.parking.api.response.CreateOperationResponse;
-import org.test.parking.api.response.DeleteOperationResponse;
-import org.test.parking.api.response.UpdateOperationResponse;
-import org.test.parking.exception.ConflictException;
 import org.test.parking.exception.NotFoundException;
+import org.test.parking.exception.domain.ConflictException;
+import org.test.parking.exception.domain.DomainException;
 import org.test.parking.exception.domain.LevelNotFoundException;
 import org.test.parking.exception.domain.LotNotFoundException;
-import org.test.parking.exception.domain.RestrictedLotOperationException;
 import org.test.parking.exception.domain.SlotNotFoundException;
+import org.test.parking.lot.domain.LevelDto;
+import org.test.parking.lot.domain.LotDto;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.lot.service.ParkingLotService;
 
 import jakarta.validation.Valid;
@@ -41,126 +41,88 @@ public class ParkingLotController {
     }
 
     @PostMapping("/lots")
-    public ResponseEntity<CreateOperationResponse> createLot(@Valid @RequestBody LotCreateRequest request) throws ConflictException {
-        String lotId = spaceService.addLot(request.getName());
+    public ResponseEntity<LotDto> createLot(@Valid @RequestBody LotCreateRequest request) throws ConflictException {
+        LotDto createdLot = spaceService.addLot(request.getName());
         URI location = ServletUriComponentsBuilder
             .fromCurrentRequest()
             .path("/{lotId}")
-            .buildAndExpand(lotId)
+            .buildAndExpand(createdLot.getId())
             .toUri();
-        CreateOperationResponse response = CreateOperationResponse.builder().createdEntityId(lotId).build();
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(createdLot);
     }
 
     @DeleteMapping("/lots/{lotId}")
-    public ResponseEntity<DeleteOperationResponse> deleteLot(@PathVariable String lotId) throws NotFoundException {
-        DeleteOperationResponse.DeleteOperationResponseBuilder responseBuilder = DeleteOperationResponse.builder();
+    public ResponseEntity<Void> deleteLot(@PathVariable String lotId) throws NotFoundException, DomainException {
         try {
-            spaceService.removeLot(lotId);
-            responseBuilder
-                .success(true);
-        } catch (RestrictedLotOperationException e) {
-            responseBuilder
-                .success(false)
-                .operationDetails(e.getMessage());
+            LotDto removedLot = spaceService.removeLot(lotId);
+            return ResponseEntity.noContent().build();
         } catch (LotNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
-        return ResponseEntity.ok(responseBuilder.build());
     }
 
     @PostMapping("/lots/{lotId}/levels")
-    public ResponseEntity<CreateOperationResponse> createLevel(@PathVariable String lotId, @Valid @RequestBody LevelCreateRequest request) throws ConflictException, NotFoundException {
-        //TODO: Explicitly tell about Lombok annotations processing in documentation (README.md) to avoid confusion for developers who are not familiar with Lombok, because it may lead to confusion about where the getters and setters are coming from, etc.
+    public ResponseEntity<LevelDto> createLevel(@PathVariable String lotId, @Valid @RequestBody LevelCreateRequest request) throws ConflictException, NotFoundException {
         try {
-            Integer addedLevelId = spaceService.addLevel(lotId, request.getNumber());
-            CreateOperationResponse response = CreateOperationResponse.builder().createdEntityId(addedLevelId.toString()).build();
+            LevelDto addedLevel = spaceService.addLevel(lotId, request.getNumber());
             URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{levelNumber}")
-                .buildAndExpand(addedLevelId)
+                .buildAndExpand(addedLevel.getNumber())
                 .toUri();
-            return ResponseEntity.created(location).body(response);
+            return ResponseEntity.created(location).body(addedLevel);
         } catch (LotNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
     }
 
     @DeleteMapping("/lots/{lotId}/levels/{levelNumber}")
-    public ResponseEntity<DeleteOperationResponse> deleteLevel(@PathVariable String lotId, @PathVariable Integer levelNumber) throws NotFoundException {
-        DeleteOperationResponse.DeleteOperationResponseBuilder responseBuilder = DeleteOperationResponse.builder();
+    public ResponseEntity<Void> deleteLevel(@PathVariable String lotId, @PathVariable Integer levelNumber) throws NotFoundException, DomainException {
         try {
-            spaceService.removeLevel(lotId, levelNumber);
-            responseBuilder
-                .success(true);
-        } catch (RestrictedLotOperationException e) {
-            responseBuilder
-                .success(false)
-                .operationDetails(e.getMessage());
-        } catch (LotNotFoundException | LevelNotFoundException e) {
+            LevelDto removedLevel = spaceService.removeLevel(lotId, levelNumber);
+            return ResponseEntity.noContent().build();
+        } catch (LevelNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
-        return ResponseEntity.ok(responseBuilder.build());
     }
 
     @PostMapping("/lots/{lotId}/levels/{levelNumber}/slots")
-    //TODO: Use some Response object instead of returning Slot directly, because we may want to return additional info in the future, such as the URL of the created slot, etc.
-    //TODO: align openapi.yaml with controllers
-    public ResponseEntity<CreateOperationResponse> createSlot(
+    public ResponseEntity<SlotDto> createSlot(
         @PathVariable String lotId,
         @PathVariable Integer levelNumber,
-        @Valid @RequestBody SlotCreateRequest request) throws NotFoundException
+        @Valid @RequestBody SlotCreateRequest request) throws DomainException
     {
-        try {
-            Integer addedSlotId = spaceService.addSlot(lotId, levelNumber, request.getType());
-            CreateOperationResponse response = CreateOperationResponse.builder().createdEntityId(addedSlotId.toString()).build();
-            URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{slotId}")
-                .buildAndExpand(addedSlotId)
-                .toUri();
-            return ResponseEntity.created(location).body(response);
-        } catch (LotNotFoundException | LevelNotFoundException e) {
-            throw new NotFoundException(e.getMessage());
-        }
+        SlotDto addedSlot = spaceService.addSlot(lotId, levelNumber, request.getType());
+        URI location = ServletUriComponentsBuilder
+            .fromCurrentRequest()
+            .path("/{slotId}")
+            .buildAndExpand(addedSlot.getId())
+            .toUri();
+        return ResponseEntity.created(location).body(addedSlot);
     }
 
     @PatchMapping("/lots/{lotId}/levels/{levelNumber}/slots/{slotId}")
-    public ResponseEntity<UpdateOperationResponse> updateSlot(
+    public ResponseEntity<SlotDto> updateSlot(
         @PathVariable String lotId,
         @PathVariable Integer levelNumber,
         @PathVariable int slotId,
-        @Valid @RequestBody SlotUpdateRequest request) throws NotFoundException
+        @Valid @RequestBody SlotUpdateRequest request) throws NotFoundException, DomainException
     {
-        UpdateOperationResponse.UpdateOperationResponseBuilder responseBuilder = UpdateOperationResponse.builder();
         try {
-            spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus());
-            responseBuilder
-                .success(true);
-        } catch (RestrictedLotOperationException e) {
-            responseBuilder
-                .success(false)
-                .operationDetails(e.getMessage());
-        } catch (LotNotFoundException | LevelNotFoundException | SlotNotFoundException e) {
+            SlotDto updatedSlot = spaceService.changeSlotStatus(lotId, levelNumber, slotId, request.getStatus());
+            return ResponseEntity.ok(updatedSlot);
+        } catch (SlotNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
-        return ResponseEntity.ok(responseBuilder.build());
     }
 
     @DeleteMapping("/lots/{lotId}/levels/{levelNumber}/slots/{slotId}")
-    public ResponseEntity<DeleteOperationResponse> deleteSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @PathVariable int slotId) throws NotFoundException {
-        DeleteOperationResponse.DeleteOperationResponseBuilder responseBuilder = DeleteOperationResponse.builder();
+    public ResponseEntity<Void> deleteSlot(@PathVariable String lotId, @PathVariable Integer levelNumber, @PathVariable int slotId) throws NotFoundException, DomainException {
         try {
-            spaceService.removeSlot(lotId, levelNumber, slotId);
-            responseBuilder
-                .success(true);
-        } catch (RestrictedLotOperationException e) {
-            responseBuilder
-                .success(false)
-                .operationDetails(e.getMessage());
-        } catch (LotNotFoundException | LevelNotFoundException | SlotNotFoundException e) {
+            SlotDto removedSlot = spaceService.removeSlot(lotId, levelNumber, slotId);
+            return ResponseEntity.noContent().build();
+        } catch (SlotNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
-        return ResponseEntity.ok(responseBuilder.build());
     }
 }
