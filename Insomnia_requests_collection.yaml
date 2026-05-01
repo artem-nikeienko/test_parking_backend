@@ -6,32 +6,11 @@ meta:
   modified: 1748416833409
   description: ""
 collection:
-  - name: gateway
-    meta:
-      id: fld_6439809c543e4100ad6bd4d7777db913
-      created: 1749722620891
-      modified: 1762265581115
-      sortKey: -1749722620891
-      description: ""
-  - name: worker
-    meta:
-      id: fld_46a5f1573ef9468f8292db5c8e005da9
-      created: 1749722640962
-      modified: 1762265579371
-      sortKey: -1749722640962
-      description: ""
-  - name: KTE
-    meta:
-      id: fld_a0aa1b219e134169ae8a46c921e2b5ce
-      created: 1762265602331
-      modified: 1762265602331
-      sortKey: -1762265602331
-      description: ""
   - name: Parking
     meta:
       id: fld_bdb504812a904bc9b1c078474a0ebdf4
       created: 1777486805176
-      modified: 1777498890250
+      modified: 1777587559878
       sortKey: -1777486805176
       description: ""
     children:
@@ -40,7 +19,7 @@ collection:
         meta:
           id: req_656a17ae8c4d4d8497f66798dc3a3a86
           created: 1777314143266
-          modified: 1777497968719
+          modified: 1777586528163
           isPrivate: false
           description: ""
           sortKey: -1777486830806
@@ -60,7 +39,8 @@ collection:
           afterResponse: |
             if (insomnia.response.code === 201) {
             	const body = JSON.parse(insomnia.response.body);
-            	insomnia.environment.set("newLotId", body.createdEntityId);
+            	insomnia.environment.set("newLotId", body.id);
+            	insomnia.environment.set("newLotName", body.name);
             }
         settings:
           renderRequestBody: true
@@ -75,7 +55,7 @@ collection:
         meta:
           id: req_784c7e5c3f6c440486c26ccca0a23525
           created: 1777486839134
-          modified: 1777497981531
+          modified: 1777586641392
           isPrivate: false
           description: ""
           sortKey: -1771743200060
@@ -95,7 +75,8 @@ collection:
           afterResponse: |-
             if (insomnia.response.code === 201) {
             	const body = JSON.parse(insomnia.response.body);
-            	insomnia.environment.set("newLevelNumber", body.createdEntityId);
+            	insomnia.environment.set("newLevelNumber", body.number);
+            	insomnia.environment.set("newLevelLotId", body.lotId);
             }
         settings:
           renderRequestBody: true
@@ -111,7 +92,7 @@ collection:
         meta:
           id: req_810ffe39c0a246ba80a7e7d1ce9d9619
           created: 1777490424009
-          modified: 1777497990470
+          modified: 1777586783141
           isPrivate: false
           description: ""
           sortKey: -1768871384687
@@ -132,7 +113,10 @@ collection:
           afterResponse: |-
             if (insomnia.response.code === 201) {	
             	const body = JSON.parse(insomnia.response.body);
-            	insomnia.environment.set("newSlotId", body.createdEntityId);
+            	insomnia.environment.set("newSlotId", body.id);
+            	insomnia.environment.set("newSlotLevelNumber", body.levelNumber);
+            	insomnia.environment.set("newSlotType", body.type);
+            	insomnia.environment.set("newSlotStatus", body.status);
             }
         settings:
           renderRequestBody: true
@@ -248,7 +232,7 @@ collection:
         meta:
           id: req_9a0013ed3bd54cbab15fb4442ee1ee1f
           created: 1777492439318
-          modified: 1777497996851
+          modified: 1777587368288
           isPrivate: false
           description: ""
           sortKey: -1767435476900.5
@@ -258,7 +242,7 @@ collection:
           text: |-
             {
             	"vehicle": {
-            		"licensePlate": "AA1234BE",
+            		"licensePlate": "DD1234BE",
             		"type": "CAR"
             	}
             }
@@ -339,11 +323,11 @@ collection:
           rebuildPath: true
       - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
           _.newLevelNumber }}/slots/{{ _.newSlotId }}
-        name: ChangeSlotStatus
+        name: MarkSlotAsUnavailable
         meta:
           id: req_634430a0e1c44ee5bcc48027e3a26e55
           created: 1777494420837
-          modified: 1777497178512
+          modified: 1777586876268
           isPrivate: false
           description: ""
           sortKey: -1767435476950.5
@@ -352,7 +336,37 @@ collection:
           mimeType: application/json
           text: |-
             {
-            	"statsus": "UNAVAILABLE"
+            	"status": "UNAVAILABLE"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.4.0
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8080/api/v1/parking/lots/{{ _.newLotId }}/levels/{{
+          _.newLevelNumber }}/slots/{{ _.newSlotId }}
+        name: MarkSlotAsAvailable
+        meta:
+          id: req_67be03d90e61446a8aa32125965e985d
+          created: 1777586932052
+          modified: 1777586936641
+          isPrivate: false
+          description: ""
+          sortKey: -1767435476925.5
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"status": "AVAILABLE"
             }
         headers:
           - name: Content-Type
@@ -374,7 +388,7 @@ cookieJar:
   meta:
     id: jar_99d30891da4bdcebc63947a8fc17f076de878684
     created: 1748416948570
-    modified: 1777498442693
+    modified: 1777587559723
   cookies:
     - id: ef632dbf-51b7-4cee-a90b-6f1c0b53c4c0
       key: foo
@@ -388,10 +402,15 @@ environments:
   meta:
     id: env_99d30891da4bdcebc63947a8fc17f076de878684
     created: 1748416948470
-    modified: 1777498442695
+    modified: 1777587559876
     isPrivate: false
   data:
-    newSlotId: "1"
-    newSessionId: 0dca83bb-6211-4875-8533-89fe876004b4
-    newLevelNumber: "1"
-    newLotId: 1c325db1-aa33-4f22-ba02-bd4fc7645b7d
+    newSlotId: 1
+    newSessionId: b4223bf0-37a8-4562-9333-121a1468b021
+    newLevelNumber: 1
+    newLotId: 9a6ae748-f611-480b-a979-47b832d3fdca
+    newLotName: lot4
+    newLevelLotId: 9a6ae748-f611-480b-a979-47b832d3fdca
+    newSlotLevelNumber: 1
+    newSlotType: LARGE
+    newSlotStatus: AVAILABLE

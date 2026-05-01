@@ -17,13 +17,14 @@ import org.test.parking.assignment.query.SlotQueryService;
 import org.test.parking.assignment.query.impl.FindAvailableAndCompatibleSlotQueryService;
 import org.test.parking.assignment.service.SlotAssignmentService;
 import org.test.parking.assignment.service.impl.SlotAssignmentServiceImpl;
-import org.test.parking.exception.domain.LotNotFoundException;
 import org.test.parking.exception.domain.NoAvailableSlotsException;
 import org.test.parking.exception.domain.SessionAlreadyCompletedException;
 import org.test.parking.exception.domain.SessionNotFoundException;
 import org.test.parking.exception.domain.VehicleParkedException;
+import org.test.parking.lot.domain.LevelDto;
 import org.test.parking.lot.domain.Lot;
 import org.test.parking.lot.domain.Slot;
+import org.test.parking.lot.domain.SlotDto;
 import org.test.parking.lot.domain.SlotType;
 import org.test.parking.lot.domain.policy.SlotAvailabilityPolicy;
 import org.test.parking.lot.domain.policy.SlotCompatibilityPolicy;
@@ -96,7 +97,7 @@ public class ParkingSessionServiceTest {
         assertNotNull(session.getSlotAssignment());
 
         Lot updated = lotRepository.findById(lot.getId()).orElseThrow();
-        Slot slot = updated.getLevels().iterator().next().getSlots().iterator().next();
+        SlotDto slot = updated.getLevels().iterator().next().getSlots().iterator().next();
 
         assertEquals(SlotStatus.OCCUPIED, slot.getStatus());
     }
@@ -184,8 +185,8 @@ public class ParkingSessionServiceTest {
 
     private Lot createLotWithSingleSlot() throws Exception {
         Lot lot = lotRepository.save(new Lot("Lot A"));
-        int levelNumber = lot.addLevel(1);
-        lot.addSlot(levelNumber, SlotType.COMPACT);
+        LevelDto level = lot.addLevel(1);
+        lot.addSlot(level.getNumber(), SlotType.COMPACT);
         return lot;
     }
 }
